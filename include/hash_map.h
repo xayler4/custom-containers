@@ -71,7 +71,6 @@ namespace ccnt {
             }
 
             Reference operator ++ () {
-                
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
@@ -83,7 +82,6 @@ namespace ccnt {
                 while (m_data != it.m_data) {
                     m_data++;
                     if (m_data->get_hash_code()) {
-                        m_data--;
                         return false;
                     }
                 }
