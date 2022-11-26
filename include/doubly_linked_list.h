@@ -5,56 +5,55 @@
 
 namespace ccnt {
     template<typename TValue>
-    class Node {
+    struct Node {
     public:
         template<typename... TArgs>
-        Node(std::nullptr_t dummy,  Node<TValue>* previous,  Node<TValue>* next, TArgs&&... args) : m_value(TValue(std::forward<TArgs>(args)...)), m_previous(previous), m_next(next) {
-            if (m_previous != nullptr) {
-                m_previous->m_next = this;
+        Node(std::nullptr_t dummy,  Node<TValue>* previous,  Node<TValue>* next, TArgs&&... args) : value(TValue(std::forward<TArgs>(args)...)), previous(previous), next(next) {
+            if (this->previous != nullptr) {
+                this->previous->next = this;
             }
-            if (m_next != nullptr) {
-                m_next->m_previous = this;
-            }
-        }
-
-        Node(Node<TValue>* previous,  Node<TValue>* next, TValue&& value) : m_value(std::forward<TValue>(value)), m_previous(previous), m_next(next) {
-            if (m_previous != nullptr) {
-                m_previous->m_next = this;
-            }
-            if (m_next != nullptr) {
-                m_next->m_previous = this;
+            if (this->next != nullptr) {
+                this->next->previous = this;
             }
         }
 
-        Node(Node<TValue>* previous,  Node<TValue>* next, TValue& value) : m_value(std::move(value)), m_previous(previous), m_next(next) {
-            if (m_previous != nullptr) {
-                m_previous->m_next = this;
+        Node(Node<TValue>* previous,  Node<TValue>* next, TValue&& value) : value(std::forward<TValue>(value)), previous(previous), next(next) {
+            if (this->previous != nullptr) {
+                this->previous->next = this;
             }
-            if (m_next != nullptr) {
-                m_next->m_previous = this;
+            if (this->next != nullptr) {
+                this->next->previous = this;
+            }
+        }
+
+        Node(Node<TValue>* previous,  Node<TValue>* next, TValue& value) : value(std::move(value)), previous(previous), next(next) {
+            if (this->previous != nullptr) {
+                this->previous->next = this;
+            }
+            if (this->next != nullptr) {
+                this->next->previous = this;
             }
         }
 
         ~Node() {
-            if (m_previous != nullptr) {
-                m_previous->m_next = m_next;
+            if (this->previous != nullptr) {
+                this->previous->next = next;
             }
-            if (m_next != nullptr) {
-                m_next->m_previous = m_previous;
+            if (this->next != nullptr) {
+                this->next->previous = previous;
             }
         }
 
-        inline operator TValue&() { return m_value; }
-        inline Node<TValue>* get_next() const { return m_next; }
-        inline Node<TValue>* get_previous() const { return m_previous; }
+        inline operator TValue&() { return value; }
 
         Node(const Node<TValue>&) = delete;
         Node operator = (const Node<TValue>&) = delete;
 
-    private: 
-        TValue m_value;
-        Node<TValue>* m_previous;
-        Node<TValue>* m_next;
+    public: 
+        TValue value;
+        Node<TValue>* previous;
+        Node<TValue>* next;
+
     };
 
 
@@ -82,7 +81,7 @@ namespace ccnt {
             }
 
             Reference operator ++ () {
-                m_node = m_node->get_next();
+                m_node = m_node->next;
                 return *m_node;
             }
 
@@ -100,8 +99,17 @@ namespace ccnt {
 
 
     public:
-        DoublyLinkedList() : m_head(nullptr), m_tail(nullptr), m_length(0) {
-            
+        DoublyLinkedList() : m_length(0) {
+            m_head = m_allocator.allocate(1);
+            m_tail = m_allocator.allocate(1);
+
+            m_inactive_head = m_head;
+            m_inactive_tail = m_tail;
+
+            m_head->next = m_tail;
+            m_head->previous = nullptr;
+            m_tail->previous = m_head;
+            m_tail->next = nullptr;
         }
 
         ~DoublyLinkedList() {
@@ -110,159 +118,229 @@ namespace ccnt {
 
         template<typename... TArgs>
         Node<TValue>& emplace_after(Node<TValue>& previous, TArgs&&... args) {
-            Node<TValue>* ptr = &previous;
-            if (ptr == m_tail) {
+            if (&previous == m_tail) {
                 return emplace_at_tail(std::forward<TArgs>(args)...);
             }
-            Node<TValue>* new_node = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(new_node, nullptr, previous, nullptr, std::forward<TArgs>(args)...);
+            Node<TValue>* new_node = m_allocator.allocate(1);
+			std::construct_at(new_node, nullptr, &previous, previous.next, std::forward<TArgs>(args)...);
             m_length++;
             return *new_node;
         }
 
         Node<TValue>& insert_after(Node<TValue>& previous, TValue&& value) {
-            Node<TValue>* ptr = &previous;
-            if (ptr == m_tail) {
-                return insert_at_tail(value);
+            if (&previous == m_tail) {
+                return insert_at_tail(std::forward<TValue>(value));
             }
-            Node<TValue>* new_node = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(new_node, previous, nullptr, std::forward<TValue>(value));
+            Node<TValue>* new_node = m_allocator.allocate(1);
+			std::construct_at(new_node, &previous, previous.next, std::forward<TValue>(value));
             m_length++;
             return *new_node;
         }
 
         Node<TValue>& insert_after(Node<TValue>& previous, TValue& value) {
-            Node<TValue>* ptr = &previous;
-            if (ptr == m_tail) {
+            if (&previous == m_tail) {
                 return insert_at_tail(value);
             }
-            Node<TValue>* new_node = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(new_node, previous, nullptr, value);
+            Node<TValue>* new_node = m_allocator.allocate(1);
+			std::construct_at(new_node, &previous, previous.next, value);
             m_length++;
             return *new_node;
         }
 
         template<typename... TArgs>
         Node<TValue>& emplace_before(Node<TValue>& next, TArgs&&... args) {
-            Node<TValue>* ptr = &next;
-            if (ptr == m_head) {
+            if (&next == m_head) {
                 return emplace_at_head(std::forward<TArgs>(args)...);
             }
 
-            Node<TValue>* new_node = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(new_node, nullptr, nullptr, next, std::forward<TArgs>(args)...);
+            Node<TValue>* new_node = m_allocator.allocate(1);
+			std::construct_at(new_node, nullptr, next.previous, &next, std::forward<TArgs>(args)...);
             m_length++;
             return *new_node;
         }
 
         Node<TValue>& insert_before(Node<TValue>& next, TValue&& value) {
-            Node<TValue>* ptr = &next;
-            if (ptr == m_head) {
+            if (&next == m_head) {
                 return insert_at_head(value);
             }
-            Node<TValue>* new_node = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(new_node, nullptr, next, std::forward<TValue>(value));
+            Node<TValue>* new_node = m_allocator.allocate(1);
+			std::construct_at(new_node, next.previous, &next, std::forward<TValue>(value));
             m_length++;
             return *new_node;
         }
 
         Node<TValue>& insert_before(Node<TValue>& next, TValue& value) {
-            Node<TValue>* ptr = &next;
-            if (ptr == m_head) {
+            if (&next == m_head) {
                 return insert_at_head(value);
             }
-            Node<TValue>* new_node = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(new_node, nullptr, next, value);
+            Node<TValue>* new_node = m_allocator.allocate(1);
+			std::construct_at(new_node, next.previous, &next, value);
             m_length++;
             return *new_node;
         }
 
         template<typename... TArgs>
         Node<TValue>& emplace_at_tail(TArgs&&... args) {
-            Node<TValue>* tail = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(tail, nullptr, nullptr, m_tail, std::forward<TArgs>(args)...);
-            m_tail = tail;
-            m_length++;
+            if (m_tail == m_inactive_tail) {
+                std::construct_at(m_tail->value, std::forward<TArgs>(args)...);
+                m_inactive_tail = nullptr;
+            }
+            else {
+                Node<TValue>* tail = m_allocator.allocate(1);
+                std::construct_at(tail, m_tail, nullptr, std::forward<TArgs>(args)...);
+                m_tail = tail;
+            }
             return *m_tail;
         }
 
         Node<TValue>& insert_at_tail(TValue&& value) {
-            Node<TValue>* tail = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(tail, nullptr, m_tail, std::forward<TValue>(value));
-            m_tail = tail;
+            if (m_tail == m_inactive_tail) {
+                std::construct_at(m_tail->value, std::forward<TValue>(value));
+                m_inactive_tail = nullptr;
+            }
+            else {
+                Node<TValue>* tail = m_allocator.allocate(1);
+                std::construct_at(tail, m_tail, nullptr, std::forward<TValue>(value));
+                m_tail = tail;
+            }
             m_length++;
             return *m_tail;
         }
 
         Node<TValue>& insert_at_tail(TValue& value) {
-            Node<TValue>* tail = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(tail, nullptr, m_tail, value);
-            m_tail = tail;
+            if (m_tail == m_inactive_tail) {
+                m_tail->value = std::move(value);
+                m_inactive_tail = nullptr;
+            }
+            else {
+                Node<TValue>* tail = m_allocator.allocate(1);
+                std::construct_at(tail, m_tail, nullptr, value);
+                m_tail = tail;
+            }
             m_length++;
             return *m_tail;
         }
 
         template<typename... TArgs>
         Node<TValue>& emplace_at_head(TArgs&&... args) {
-            Node<TValue>* head = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(head, nullptr, m_head, std::forward<TArgs>(args)...);
-            m_head = head;
+            if (m_head == m_inactive_head) {
+                std::construct_at(m_head->value, std::forward<TArgs>(args)...);
+                m_inactive_head = nullptr;
+            }
+            else {
+                Node<TValue>* head = m_allocator.allocate(1);
+			    std::construct_at(head, nullptr, m_head, std::forward<TArgs>(args)...);
+                m_head = head;
+            }
             m_length++;
             return *m_head;
         }
 
         Node<TValue>& insert_at_head(TValue&& value) {
-            Node<TValue>* head = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(head, nullptr, m_head, std::forward<TValue>(value));
-            m_head = head;
+            if (m_head == m_inactive_head) {
+                std::construct_at(m_head->value, std::forward<TValue>(value));
+                m_inactive_head = nullptr;
+            }
+            else {
+                Node<TValue>* head = m_allocator.allocate(1);
+			    std::construct_at(head, nullptr, m_head, std::forward<TValue>(value));
+                m_head = head;
+            }
             m_length++;
             return *m_head;
         }
 
         Node<TValue>& insert_at_head(TValue& value) {
-            Node<TValue>* head = m_allocator.allocate(sizeof(Node<TValue>));
-			std::construct_at(head, nullptr, m_head, value);
-            m_head = head;
+            if (m_head == m_inactive_head) {
+                m_head->value = std::move(value);
+                m_inactive_head = nullptr;
+            }
+            else {
+                Node<TValue>* head = m_allocator.allocate(1);
+			    std::construct_at(head, nullptr, m_head, value);
+                m_head = head;
+            }
             m_length++;
             return *m_head;
         }
 
         Node<TValue>* erase(Node<TValue>& node) {
-            Node<TValue>* ptr = &node;
-            if (ptr == m_tail) {
+            assert(m_length);
+            if (&node == m_tail) {
                 return pop_tail();
             }
-            if (ptr == m_head) {
+            if (&node == m_head) {
                 return pop_head();
             }
-            Node<TValue>* next = ptr->get_next();
-            delete ptr;
+            Node<TValue>* next = node.next;
+            std::destroy_at(&node);
+			m_allocator.deallocate(&node, sizeof(Node<TValue>));
             m_length--;
             return next;
         }
 
         Node<TValue>* pop_tail() {
-            Node<TValue>* new_tail = m_tail.get_previous();
-            delete m_tail;
+            assert(m_length);
+            if (m_tail->previous == m_head) {
+                if (m_tail != m_inactive_tail) {
+                    std::destroy_at(&m_tail->value);
+                    m_inactive_tail = m_tail;
+                    m_length--;
+                    return nullptr;
+                }
+                else {
+                    return pop_head();
+                }
+            }
+            Node<TValue>* new_tail = m_tail->previous;
+            if (m_tail != m_inactive_tail) {
+                std::destroy_at(m_tail);
+            }
+			m_allocator.deallocate(m_tail, sizeof(Node<TValue>));
+
             m_tail = new_tail;
             m_length--;
             return m_tail;
         }
 
         Node<TValue>* pop_head() {
-            Node<TValue>* new_head = m_tail.get_next();
-            delete m_head;
+            assert(m_length);
+            if (m_head->next == m_tail) {
+                if (m_head != m_inactive_head) {
+                    std::destroy_at(&m_head->value);
+                    m_inactive_head = m_head;
+                    m_length--;
+                    return nullptr;
+                }
+                else {
+                    return pop_tail();
+                }
+            }
+            Node<TValue>* new_head = m_head->next;
+            if (m_head != m_inactive_head) {
+                std::destroy_at(m_head);
+            }
+			m_allocator.deallocate(m_head, sizeof(Node<TValue>));
+
             m_head = new_head;
             m_length--;
             return m_head;
         }
 
         Iterator begin() {
-            return Iterator(m_head);
+            Node<TValue>* node = m_head;
+            if (m_head == m_inactive_head) {
+                node = node->next;
+            }
+            return Iterator(node);
         }
 
         Iterator end() {
-            return Iterator(nullptr);
+            Node<TValue>* node = nullptr;
+            if (m_tail == m_inactive_tail) {
+                node = m_tail;
+            }
+            return Iterator(node);
         }
 
         inline const Node<TValue>* get_head() const { 
@@ -278,6 +356,8 @@ namespace ccnt {
     private:
         Node<TValue>* m_head;
         Node<TValue>* m_tail;
+        Node<TValue>* m_inactive_head;
+        Node<TValue>* m_inactive_tail;
         std::uint32_t m_length;
         TAllocator m_allocator;
     };
