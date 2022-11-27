@@ -26,7 +26,7 @@ namespace ccnt {
             }
         }
 
-        Node(Node<TValue>* previous,  Node<TValue>* next, TValue& value) : value(std::move(value)), previous(previous), next(next) {
+        Node(Node<TValue>* previous,  Node<TValue>* next, const TValue& value) : value(std::move(value)), previous(previous), next(next) {
             if (this->previous != nullptr) {
                 this->previous->next = this;
             }
@@ -137,7 +137,7 @@ namespace ccnt {
             return *new_node;
         }
 
-        Node<TValue>& insert_after(Node<TValue>& previous, TValue& value) {
+        Node<TValue>& insert_after(Node<TValue>& previous, const TValue& value) {
             if (&previous == m_tail) {
                 return insert_at_tail(value);
             }
@@ -169,7 +169,7 @@ namespace ccnt {
             return *new_node;
         }
 
-        Node<TValue>& insert_before(Node<TValue>& next, TValue& value) {
+        Node<TValue>& insert_before(Node<TValue>& next, const TValue& value) {
             if (&next == m_head) {
                 return insert_at_head(value);
             }
@@ -207,7 +207,7 @@ namespace ccnt {
             return *m_tail;
         }
 
-        Node<TValue>& insert_at_tail(TValue& value) {
+        Node<TValue>& insert_at_tail(const TValue& value) {
             if (m_tail == m_inactive_tail) {
                 m_tail->value = std::move(value);
                 m_inactive_tail = nullptr;
@@ -250,7 +250,7 @@ namespace ccnt {
             return *m_head;
         }
 
-        Node<TValue>& insert_at_head(TValue& value) {
+        Node<TValue>& insert_at_head(const TValue& value) {
             if (m_head == m_inactive_head) {
                 m_head->value = std::move(value);
                 m_inactive_head = nullptr;
@@ -352,6 +352,9 @@ namespace ccnt {
         inline std::uint32_t get_length() const {
             return m_length;
         }
+
+        DoublyLinkedList(const DoublyLinkedList<TValue, TAllocator>&) = delete;
+        DoublyLinkedList operator = (const DoublyLinkedList<TValue, TAllocator>&) = delete;
 
     private:
         Node<TValue>* m_head;
