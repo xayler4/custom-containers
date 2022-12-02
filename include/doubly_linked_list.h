@@ -2,13 +2,14 @@
 
 #include <cstdint>
 #include <memory>
+#include <assert.h>
 
 namespace ccnt {
     template<typename TValue>
     struct Node {
     public:
         template<typename... TArgs>
-        Node(std::nullptr_t dummy,  Node<TValue>* previous,  Node<TValue>* next, TArgs&&... args) : value(TValue(std::forward<TArgs>(args)...)), previous(previous), next(next) {
+        Node(std::nullptr_t dummy,  Node<TValue>* previous,  Node<TValue>* next, TArgs&&... args) : value(std::forward<TArgs>(args)...), previous(previous), next(next) {
             if (this->previous != nullptr) {
                 this->previous->next = this;
             }
@@ -113,7 +114,9 @@ namespace ccnt {
         }
 
         ~DoublyLinkedList() {
-            
+            for (Node<TValue>& node : *this){
+                erase(node);
+            }
         }
 
         template<typename... TArgs>
@@ -182,20 +185,21 @@ namespace ccnt {
         template<typename... TArgs>
         Node<TValue>& emplace_at_tail(TArgs&&... args) {
             if (m_tail == m_inactive_tail) {
-                std::construct_at(m_tail->value, std::forward<TArgs>(args)...);
+                std::construct_at(&m_tail->value, std::forward<TArgs>(args)...);
                 m_inactive_tail = nullptr;
             }
             else {
                 Node<TValue>* tail = m_allocator.allocate(1);
-                std::construct_at(tail, m_tail, nullptr, std::forward<TArgs>(args)...);
+                std::construct_at(tail, nullptr, m_tail, nullptr, std::forward<TArgs>(args)...);
                 m_tail = tail;
             }
+            m_length++;
             return *m_tail;
         }
 
         Node<TValue>& insert_at_tail(TValue&& value) {
             if (m_tail == m_inactive_tail) {
-                std::construct_at(m_tail->value, std::forward<TValue>(value));
+                std::construct_at(&m_tail->value, std::forward<TValue>(value));
                 m_inactive_tail = nullptr;
             }
             else {
@@ -224,7 +228,7 @@ namespace ccnt {
         template<typename... TArgs>
         Node<TValue>& emplace_at_head(TArgs&&... args) {
             if (m_head == m_inactive_head) {
-                std::construct_at(m_head->value, std::forward<TArgs>(args)...);
+                std::construct_at(&m_head->value, std::forward<TArgs>(args)...);
                 m_inactive_head = nullptr;
             }
             else {
@@ -238,7 +242,7 @@ namespace ccnt {
 
         Node<TValue>& insert_at_head(TValue&& value) {
             if (m_head == m_inactive_head) {
-                std::construct_at(m_head->value, std::forward<TValue>(value));
+                std::construct_at(&m_head->value, std::forward<TValue>(value));
                 m_inactive_head = nullptr;
             }
             else {
