@@ -71,12 +71,10 @@ namespace ccnt {
                 return m_data; 
             }
 
-            Reference operator ++ () {
+            void operator ++ () {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
-
-                return *m_data;
             }
 
             bool operator == (const Iterator& it) {
@@ -269,7 +267,7 @@ namespace ccnt {
                 return m_it;
             }
 
-            Reference operator ++ () {
+            void operator ++ () {
                 if (m_it == m_data->end()) {
                     ++m_data;
                     m_it = typename DoublyLinkedList<ValueType, TAllocator2>::Iterator(m_data->begin());
@@ -277,8 +275,6 @@ namespace ccnt {
                 else {
                     ++m_it;
                 }
-
-                return *m_it;
             }
 
             bool operator == (const Iterator& it) {

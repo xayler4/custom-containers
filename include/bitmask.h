@@ -15,6 +15,37 @@ namespace ccnt {
                 std::conditional_t<(TBits <= 64), std::uint64_t,
                 std::nullptr_t>>>>;
 
+        class Iterator {
+        public:
+            Iterator(Bitmask<TBits>& bitmask, std::uint8_t nbit) : m_bitmask(bitmask), m_nbit(nbit) {}
+            ~Iterator() = default;
+
+            bool operator * () {
+                return m_bitmask[m_nbit];
+            }
+
+            bool operator -> () {
+                return m_bitmask[m_nbit];
+            }
+
+            void operator ++ () {
+                m_nbit++;
+            }
+
+            bool operator != (const Iterator& it ) {
+                return ((it.m_bitmask != m_bitmask) || (m_nbit != it.m_nbit));
+            }
+
+            bool operator == (const Iterator& it ) {
+                return ((it.m_bitmask == m_bitmask) && (m_nbit == it.m_nbit));
+            }
+
+        private:
+            Bitmask<TBits>& m_bitmask;
+            std::uint8_t m_nbit;
+        };
+
+    public:
         Bitmask() : m_bitmask(0) {}
         Bitmask(uint_t bitmask) : m_bitmask(bitmask) {}
 
@@ -62,6 +93,11 @@ namespace ccnt {
         inline bool operator == ( TBitmask bitmask) {
             return m_bitmask == bitmask.m_bitmask;
         }
+
+        template<typename TBitmask>
+        inline bool operator != ( TBitmask bitmask) {
+            return m_bitmask != bitmask.m_bitmask;
+        }
         
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint8_t>::value, std::nullptr_t>::type = nullptr>
         inline bool operator [] (std::uint8_t nbit) const {
@@ -93,6 +129,14 @@ namespace ccnt {
 
         inline void unset_bit(std::uint8_t nbit) {
             m_bitmask &= ~(1UL << ((TBits - 1) - nbit));
+        }
+
+        Iterator begin() {
+            return Iterator(*this, 0);
+        }
+
+        Iterator end() {
+            return Iterator(*this, TBits);
         }
 
     private:

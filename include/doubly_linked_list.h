@@ -81,9 +81,8 @@ namespace ccnt {
                 return m_node; 
             }
 
-            Reference operator ++ () {
+            void operator ++ () {
                 m_node = m_node->next;
-                return *m_node;
             }
 
             bool operator == (const Iterator& it) {

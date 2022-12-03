@@ -28,8 +28,8 @@ namespace ccnt {
                 return m_data; 
             }
 
-            Reference operator ++ () {
-                return *(m_data++);
+            void operator ++ () {
+                m_data++;
             }
 
             bool operator == (const Iterator& it) {
