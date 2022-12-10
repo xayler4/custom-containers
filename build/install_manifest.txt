@@ -1,6 +1,0 @@
-/usr/local/include/bitmask.h
-/usr/local/include/circular_array.h
-/usr/local/include/doubly_linked_list.h
-/usr/local/include/hash_map.h
-/usr/local/include/vector.h
-/usr/local/share/pkgconfig/custom-containers.pc
