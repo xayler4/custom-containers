@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.20.0)
 project(custom-containers VERSION 1.0.0 DESCRIPTION "A collection of data structures for c++")
 
 set (HEADERS
-    include/bitmask.h
-    include/circular_array.h
-    include/doubly_linked_list.h
-    include/hash_map.h
-    include/vector.h
+    include/ccnt/bitmask.h
+    include/ccnt/circular_array.h
+    include/ccnt/doubly_linked_list.h
+    include/ccnt/hash_map.h
+    include/ccnt/vector.h
 )
 
 include(GNUInstallDirs)
