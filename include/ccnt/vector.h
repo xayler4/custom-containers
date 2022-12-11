@@ -233,9 +233,6 @@ namespace ccnt {
             return Iterator(m_data + m_count);
         }
 
-        Vector(const Vector<TValue&, TGrowthFactor, TAllocator>& ) = delete;
-        Vector operator = (const Vector<TValue&, TGrowthFactor, TAllocator>&) = delete;
-
     private:
         void grow() {
             m_capacity += m_capacity * TGrowthFactor;
