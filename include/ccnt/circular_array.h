@@ -45,8 +45,9 @@ namespace ccnt  {
         };
 
     public:
-        CircularArray() : m_next(m_data), m_count(0) {
+        CircularArray() : m_count(0) {
             m_data = m_allocator.allocate(TCapacity);
+            m_next = m_data;
         };
 
         ~CircularArray() {
