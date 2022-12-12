@@ -110,12 +110,11 @@ namespace ccnt  {
             return m_data;
         }
 
-        inline TValue& get_current() {
-            assert(m_count);
+        inline TValue* const get_current() {
             if (m_next == m_data) {
-                return m_data[TCapacity - 1];
+                return m_data + TCapacity - 1;
             }
-            return *(m_next - 1);
+            return m_next - 1;
         }
 
         Iterator begin() {
