@@ -94,7 +94,7 @@ namespace ccnt  {
         }
 
         inline TValue& operator [] (std::uint32_t index) {
-            assert(index >= TCapacity);
+            assert(index < TCapacity);
             return m_data[index];
         }
 
