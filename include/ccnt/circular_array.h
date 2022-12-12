@@ -115,7 +115,7 @@ namespace ccnt  {
             if (m_next == m_data) {
                 return m_data[TCapacity - 1];
             }
-            return m_data[m_next - 1];
+            return m_next - 1;
         }
 
         Iterator begin() {
