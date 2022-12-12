@@ -82,7 +82,7 @@ namespace ccnt  {
             }
         }
 
-        inline TValue& operator [] (std::uint32_t index) const {
+        inline TValue& operator [] (std::uint32_t index) {
             assert(index >= TSize);
             return m_data[index];
         }
