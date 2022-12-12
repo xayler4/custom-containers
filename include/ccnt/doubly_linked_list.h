@@ -277,7 +277,7 @@ namespace ccnt {
             }
             Node<TValue>* next = node.next;
             std::destroy_at(&node);
-			m_allocator.deallocate(&node, sizeof(Node<TValue>));
+			m_allocator.deallocate(&node, 1);
             m_length--;
             return next;
         }
@@ -299,7 +299,7 @@ namespace ccnt {
             if (m_tail != m_inactive_tail) {
                 std::destroy_at(m_tail);
             }
-			m_allocator.deallocate(m_tail, sizeof(Node<TValue>));
+			m_allocator.deallocate(m_tail, 1);
 
             m_tail = new_tail;
             m_length--;
@@ -323,7 +323,7 @@ namespace ccnt {
             if (m_head != m_inactive_head) {
                 std::destroy_at(m_head);
             }
-			m_allocator.deallocate(m_head, sizeof(Node<TValue>));
+			m_allocator.deallocate(m_head, 1);
 
             m_head = new_head;
             m_length--;

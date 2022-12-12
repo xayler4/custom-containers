@@ -52,7 +52,7 @@ namespace ccnt {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 std::destroy_at(m_data + i);
             }
-            m_allocator.deallocate(m_data, sizeof(TValue) * m_capacity); 
+            m_allocator.deallocate(m_data, m_capacity); 
         }
 
         template<typename... Args>
@@ -198,7 +198,7 @@ namespace ccnt {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 m_data[i] = std::move(tmp_data[i]);
             }
-            m_allocator.deallocate(tmp_data, sizeof(TValue) * m_capacity);
+            m_allocator.deallocate(tmp_data, m_capacity);
         }
 
         void clear() {
@@ -241,7 +241,7 @@ namespace ccnt {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 m_data[i] = std::move(tmp_data[i]);
             }
-            m_allocator.deallocate(tmp_data, sizeof(TValue) * m_capacity - (m_capacity * TGrowthFactor));
+            m_allocator.deallocate(tmp_data, m_capacity - (m_capacity * TGrowthFactor));
         }
 
         void grow_front() {
@@ -251,7 +251,7 @@ namespace ccnt {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 m_data[i + 1] = std::move(tmp_data[i]);
             }
-            m_allocator.deallocate(tmp_data, sizeof(TValue) * m_capacity - (m_capacity * TGrowthFactor));
+            m_allocator.deallocate(tmp_data, m_capacity - (m_capacity * TGrowthFactor));
         }
 
         void shrink(std::uint32_t index) {
@@ -264,7 +264,7 @@ namespace ccnt {
             for (std::uint32_t i = index + 1; i < m_count; i++) {
                 m_data[i - 1] = std::move(tmp_data[i]);
             }
-            m_allocator.deallocate(tmp_data, sizeof(TValue) * (m_capacity + 1));
+            m_allocator.deallocate(tmp_data, m_capacity + 1);
         }
 
         TValue* m_data;

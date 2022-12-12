@@ -46,10 +46,15 @@ namespace ccnt  {
 
     public:
         CircularArray() : m_next(m_data){
-
+            m_data = m_allocator.allocate(TSize);
         };
 
-        ~CircularArray() = default;
+        ~CircularArray() {
+            for (std::uint32_t i = 0; i < m_count; i++) {
+                std::destroy_at(m_data[i]);
+            }
+            m_allocator.deallocate(m_data, TSize);
+        }
         
         template<typename... TArgs>
         void emplace(TArgs... args) {
@@ -60,6 +65,9 @@ namespace ccnt  {
             else {
                 ++m_next;
             }
+            if (!(m_count == TSize)) {
+                m_count++; 
+            }
         }
 
         void push(const TValue& value) {
@@ -69,6 +77,9 @@ namespace ccnt  {
             }
             else {
                 ++m_next;
+            }
+            if (!(m_count == TSize)) {
+                m_count++; 
             }
         }
 
@@ -87,6 +98,14 @@ namespace ccnt  {
             return m_data[index];
         }
 
+        inline std::uint32_t get_size() const {
+            return TSize;
+        }
+
+        inline std::uint32_t get_count() const {
+            return m_count;
+        }
+
         Iterator begin() {
             return Iterator(m_data);
         }
@@ -96,7 +115,9 @@ namespace ccnt  {
         }
 
     private:
-        TValue m_data[TSize];
+        TAllocator m_allocator;
+        TValue* m_data;
         TValue* m_next;
+        std::uint32_t m_count;
     };
 }

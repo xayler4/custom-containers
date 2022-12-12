@@ -116,7 +116,7 @@ namespace ccnt {
                     destroyed++;
                 }
                 if (destroyed == m_count) {
-                    m_allocator.deallocate(m_data, m_capacity * sizeof(HashNode<TValue>));
+                    m_allocator.deallocate(m_data, m_capacity);
                     return;
                 }
             }
@@ -223,14 +223,14 @@ namespace ccnt {
                     while (m_data[hash_index].get_hash_code()) {
                         if (++hash_index == m_capacity) {
                             grow(m_capacity + (m_capacity * TGrowthFactor));
-                            m_allocator.deallocate(tmp_data, old_capacity * sizeof(HashNode<TValue>));
+                            m_allocator.deallocate(tmp_data, old_capacity);
                             return;
                         }
                     }
                     m_data[hash_index] = std::move(tmp_data[i]);
                 }
             }
-            m_allocator.deallocate(tmp_data, old_capacity * sizeof(HashNode<TValue>));
+            m_allocator.deallocate(tmp_data, old_capacity);
         }
 
     private:
