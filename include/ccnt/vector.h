@@ -267,6 +267,10 @@ namespace ccnt {
             m_allocator.deallocate(tmp_data, m_capacity + 1);
         }
 
+        Vector (const Vector&) = delete;
+        Vector& operator = (const Vector&) = delete;
+    
+    private:
         TValue* m_data;
         std::uint32_t m_count;
         std::uint32_t m_capacity;
