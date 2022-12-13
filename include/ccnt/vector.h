@@ -213,7 +213,7 @@ namespace ccnt {
             return m_data[index];   
         }
 
-        inline const TValue* get_data() const {
+        inline TValue* const get_data() const {
             return m_data;  
         }
 

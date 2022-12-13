@@ -47,7 +47,7 @@ namespace ccnt  {
     public:
         CircularArray() : m_count(0) {
             m_data = m_allocator.allocate(TCapacity);
-            m_next = m_data;
+            m_current = m_data;
         };
 
         ~CircularArray() {
@@ -59,39 +59,39 @@ namespace ccnt  {
         
         template<typename... TArgs>
         void emplace(TArgs... args) {
-            *(m_next) = std::forward<TValue>(TValue(std::forward<TArgs>(args)...));
-            if (m_next == m_data + TCapacity - 1) {
-                m_next = m_data;
+            if (m_current == m_data + TCapacity - 1) {
+                m_current = m_data;
             }
             else {
-                ++m_next;
+                ++m_current;
             }
             if (!(m_count == TCapacity)) {
                 m_count++; 
             }
+            *(m_current) = std::forward<TValue>(TValue(std::forward<TArgs>(args)...));
         }
 
         void push(const TValue& value) {
-            *(m_next) = std::move(value);
-            if (m_next == m_data + TCapacity - 1) {
-                m_next = m_data;
+            if (m_current == m_data + TCapacity - 1) {
+                m_current = m_data;
             }
             else {
-                ++m_next;
+                ++m_current;
             }
             if (!(m_count == TCapacity)) {
                 m_count++; 
             }
+            *(m_current) = std::move(value);
         }
 
         void push(TValue&& value) {
-            *(m_next) = std::forward<TValue>(value);
-            if (m_next == m_data + TCapacity - 1) {
-                m_next = m_data;
+            if (m_current == m_data + TCapacity - 1) {
+                m_current = m_data;
             }
             else {
-                ++m_next;
+                ++m_current;
             }
+            *(m_current) = std::forward<TValue>(value);
         }
 
         inline TValue& operator [] (std::uint32_t index) {
@@ -112,10 +112,8 @@ namespace ccnt  {
         }
 
         inline TValue* const get_current() {
-            if (m_next == m_data) {
-                return m_data + TCapacity - 1;
-            }
-            return m_next - 1;
+            assert(m_count);
+            return m_current;
         }
 
         Iterator begin() {
@@ -129,7 +127,7 @@ namespace ccnt  {
     private:
         TAllocator m_allocator;
         TValue* m_data;
-        TValue* m_next;
+        TValue* m_current;
         std::uint32_t m_count;
     };
 }
