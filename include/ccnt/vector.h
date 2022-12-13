@@ -48,7 +48,7 @@ namespace ccnt {
             m_data = m_allocator.allocate(2);
         }
 
-        Vector(const Vector& vector) {
+        Vector(Vector& vector) {
             m_data = vector.m_data;
             m_count = vector.m_count;
             m_capacity = vector.m_capacity;
