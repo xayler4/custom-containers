@@ -48,6 +48,14 @@ namespace ccnt {
             m_data = m_allocator.allocate(2);
         }
 
+        Vector(const Vector& vector) {
+            m_data = vector.m_data;
+            m_count = vector.m_count;
+            m_capacity = vector.m_capacity;
+            vector.m_count = 0;
+            vector.m_capacity = 0;
+        }
+
         ~Vector() {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 std::destroy_at(m_data + i);
