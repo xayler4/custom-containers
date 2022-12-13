@@ -179,7 +179,7 @@ namespace ccnt {
         }
 
         void erase(const TValue& value) {
-            assert(m_count != 0);
+            assert(m_count);
             for (std::uint32_t i = 0; i < m_count; i++) {
                 if (m_data[i] == value) {
                     std::destroy_at(m_data + i);
@@ -191,7 +191,7 @@ namespace ccnt {
         }
 
         void reserve(std::uint32_t capacity) {
-            assert(capacity <= m_capacity);
+            assert(capacity > m_capacity);
             m_capacity = capacity;
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
