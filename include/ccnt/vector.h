@@ -201,6 +201,13 @@ namespace ccnt {
             m_allocator.deallocate(tmp_data, m_capacity);
         }
 
+        void resize(std::uint32_t size) {
+            if (m_capacity < size) {
+                reserve(size);
+            }
+            m_count = size;
+        }
+
         void clear() {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 std::destroy_at(m_data + i);
