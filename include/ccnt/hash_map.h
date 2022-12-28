@@ -1,3 +1,5 @@
+#pragma once
+
 #include "doubly_linked_list.h"
 #include <memory>
 #include <cstdint>
@@ -41,7 +43,7 @@ namespace ccnt {
     };
 
     template<typename TValue, typename TKey, float TGrowthFactor = 0.75f, typename THashIndex = DivisionHashIndex, typename TAllocator = std::allocator<HashNode<TValue>>>
-    class HashMapOpenAddressingLinearProbing {
+    class HashMapOpenAddressing {
     public:
         using Value = TValue;
         using Key   = TKey;
@@ -103,12 +105,12 @@ namespace ccnt {
         };
 
     public:
-        HashMapOpenAddressingLinearProbing() : m_count(0), m_capacity(16) {
+        HashMapOpenAddressing() : m_count(0), m_capacity(16) {
             m_data = m_allocator.allocate(m_capacity);
             std::memset(m_data, 0, m_capacity * sizeof(HashNode<TValue>));
         }
 
-        ~HashMapOpenAddressingLinearProbing() {
+        ~HashMapOpenAddressing() {
             for (std::uint32_t i = 0; i < m_capacity; i++) {
                 std::uint32_t destroyed = 0;
                 if (m_data[i].get_hash_code()) {
@@ -208,8 +210,8 @@ namespace ccnt {
             return Iterator(m_data + m_capacity);
         }
 
-        HashMapOpenAddressingLinearProbing (const HashMapOpenAddressingLinearProbing&) = delete;
-        HashMapOpenAddressingLinearProbing& operator = (const HashMapOpenAddressingLinearProbing&) = delete;
+        HashMapOpenAddressing (const HashMapOpenAddressing&) = delete;
+        HashMapOpenAddressing& operator = (const HashMapOpenAddressing&) = delete;
 
     private:
         void grow(std::uint32_t new_capacity) {
