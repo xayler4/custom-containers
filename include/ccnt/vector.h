@@ -49,7 +49,7 @@ namespace ccnt {
         }
 
         Vector(std::uint32_t capacity) : m_count(0), m_capacity(capacity) {
-            assert(m_capacity != 0)
+            assert(m_capacity != 0);
             m_data = m_allocator.allocate(m_capacity);
         }
 
