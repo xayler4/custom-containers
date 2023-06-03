@@ -56,6 +56,8 @@ namespace ccnt  {
             }
             m_allocator.deallocate(m_data, TCapacity);
         }
+
+        CircularArray(const CircularArray&) = delete;
         
         template<typename... TArgs>
         void emplace(TArgs... args) {

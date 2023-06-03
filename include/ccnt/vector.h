@@ -236,6 +236,11 @@ namespace ccnt {
             return m_data[index];   
         }
 
+        inline const TValue& operator[] (std::uint32_t index) const {
+            assert(index >= 0 && index < m_count);
+            return m_data[index];   
+        }
+
         inline TValue* const get_data() const {
             return m_data;  
         }
@@ -291,7 +296,6 @@ namespace ccnt {
         }
 
         Vector (const Vector&) = delete;
-        Vector& operator = (const Vector&) = delete;
     
     private:
         TValue* m_data;
