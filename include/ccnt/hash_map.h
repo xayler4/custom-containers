@@ -211,6 +211,7 @@ namespace ccnt {
         }
 
         HashMapOpenAddressing (const HashMapOpenAddressing&) = delete;
+        HashMapOpenAddressing& operator= (const HashMapOpenAddressing&) = default;
 
     private:
         void grow(std::uint32_t new_capacity) {
@@ -375,6 +376,7 @@ namespace ccnt {
         }
 
         HashMapSeparateChaining (const HashMapSeparateChaining&) = delete;
+        HashMapSeparateChaining& operator= (const HashMapSeparateChaining&) = default;
 
     private:
         TAllocator1 m_allocator;

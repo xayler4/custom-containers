@@ -296,6 +296,7 @@ namespace ccnt {
         }
 
         Vector (const Vector&) = delete;
+        Vector& operator= (const Vector&) = default;
     
     private:
         TValue* m_data;

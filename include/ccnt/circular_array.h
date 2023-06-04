@@ -58,6 +58,7 @@ namespace ccnt  {
         }
 
         CircularArray(const CircularArray&) = delete;
+        CircularArray& operator= (const CircularArray&) = default;
         
         template<typename... TArgs>
         void emplace(TArgs... args) {

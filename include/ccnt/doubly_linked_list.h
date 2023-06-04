@@ -357,6 +357,7 @@ namespace ccnt {
         }
 
         DoublyLinkedList(const DoublyLinkedList<TValue, TAllocator>&) = delete;
+        DoublyLinkedList& operator= (const DoublyLinkedList<TValue, TAllocator>&) = default;
 
     private:
         Node<TValue>* m_head;
