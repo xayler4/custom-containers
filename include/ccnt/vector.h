@@ -261,6 +261,9 @@ namespace ccnt {
             return Iterator(m_data + m_count);
         }
 
+        Vector (const Vector&) = delete;
+        Vector& operator= (const Vector&) = default;
+
     private:
         void grow() {
             m_capacity += m_capacity * TGrowthFactor;
@@ -295,9 +298,6 @@ namespace ccnt {
             m_allocator.deallocate(tmp_data, m_capacity + 1);
         }
 
-        Vector (const Vector&) = delete;
-        Vector& operator= (const Vector&) = default;
-    
     private:
         TValue* m_data;
         std::uint32_t m_count;
