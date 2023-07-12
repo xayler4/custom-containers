@@ -53,12 +53,7 @@ namespace ccnt {
             m_data = m_allocator.allocate(m_capacity);
         }
 
-        Vector(Vector&& vector) {
-            m_data = vector.m_data;
-            m_capacity = vector.m_capacity;
-            m_count = vector.m_count;
-            m_allocator = vector.m_allocator;
-
+        Vector(Vector&& vector) : m_data(vector.m_data), m_capacity(vector.m_capacity), m_count(vector.m_count), m_allocator(vector.m_allocator){
             vector.m_data = nullptr;
             vector.m_capacity = 0;
             vector.m_count = 0;
@@ -81,15 +76,6 @@ namespace ccnt {
             return m_data[m_count - 1];
         }
 
-        TValue& push_back(TValue&& value) {
-            if (m_capacity == m_count) {
-                grow();
-            }
-            std::construct_at(m_data + m_count, std::forward<TValue>(value));
-            m_count++;
-            return m_data[m_count - 1];
-        }
-
         TValue& push_back(const TValue& value) {
             if (m_capacity == m_count) {
                 grow();
@@ -108,6 +94,7 @@ namespace ccnt {
                 if (m_count != 0) {
                     for (std::uint32_t i = m_count; i != 0; i--) {
                         m_data[i] = std::move(m_data[i - 1]); 
+                        std::destroy_at(m_data + i - 1);
                     }
                 }
             }
@@ -124,10 +111,11 @@ namespace ccnt {
                 if (m_count != 0) {
                     for (std::uint32_t i = m_count; i != 0; i--) {
                         m_data[i] = std::move(m_data[i - 1]); 
+                        std::destroy_at(m_data + i - 1);
                     }
                 }
             }
-            std::construct_at(m_data, std::forward<TValue>(value));
+            std::construct_at(m_data, std::move(value));
             m_count++;
             return *m_data;
         }
@@ -140,6 +128,7 @@ namespace ccnt {
                 if (m_count != 0) {
                     for (std::uint32_t i = m_count; i != 0; i--) {
                         m_data[i] = std::move(m_data[i - 1]); 
+                        std::destroy_at(m_data + i - 1);
                     }
                 }
             }
@@ -154,7 +143,7 @@ namespace ccnt {
             std::destroy_at(m_data + m_count);
         }
 
-        void remove(TValue&& value) {
+        void swap_and_pop(TValue&& value) {
             assert(m_count != 0);
             if (m_count == 1) {
                 return pop_back(); 
@@ -162,13 +151,13 @@ namespace ccnt {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 if (m_data[i] == value) {
                     std::destroy_at(m_data + i);
-                    m_data[i] = std::move(m_data[m_count - 1]);
+                    std::construct_at(m_data + i, std::move(m_data[m_count - 1]));
                     return pop_back();
                 }
             }
         }
 
-        void remove(const TValue& value) {
+        void swap_and_pop(const TValue& value) {
             assert(m_count != 0);
             if (m_count == 1) {
                 return pop_back(); 
@@ -176,7 +165,7 @@ namespace ccnt {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 if (m_data[i] == value) {
                     std::destroy_at(m_data + i);
-                    m_data[i] = std::move(m_data[m_count - 1]);
+                    std::construct_at(m_data + i, std::move(m_data[m_count - 1]));
                     return pop_back();
                 }
             }

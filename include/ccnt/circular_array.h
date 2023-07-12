@@ -61,7 +61,7 @@ namespace ccnt  {
         CircularArray& operator= (const CircularArray&) = default;
         
         template<typename... TArgs>
-        void emplace(TArgs... args) {
+        void emplace(TArgs&&... args) {
             if (m_current == m_data + TCapacity - 1) {
                 m_current = m_data;
             }
@@ -71,7 +71,7 @@ namespace ccnt  {
             if (!(m_count == TCapacity)) {
                 m_count++; 
             }
-            *(m_current) = std::forward<TValue>(TValue(std::forward<TArgs>(args)...));
+            *(m_current) = std::move<TValue>(TValue(std::forward<TArgs>(args)...));
         }
 
         void push(const TValue& value) {
@@ -94,7 +94,7 @@ namespace ccnt  {
             else {
                 ++m_current;
             }
-            *(m_current) = std::forward<TValue>(value);
+            *(m_current) = std::move(value);
         }
 
         inline TValue& operator [] (std::uint32_t index) {

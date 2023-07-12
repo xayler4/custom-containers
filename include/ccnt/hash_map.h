@@ -17,6 +17,9 @@ namespace ccnt {
         HashNode(std::uint32_t hash_code, TValue&& value) : m_value(std::forward<TValue>(value)), m_hash_code(hash_code) {}
 
         HashNode(std::uint32_t hash_code, TValue& value) : m_hash_code(hash_code), m_value(value) {}
+        ~HashNode() {
+            m_hash_code = 0;
+        }
 
         inline operator TValue&() { return m_value; }
         inline std::uint32_t get_hash_code() { return m_hash_code; }
@@ -154,6 +157,7 @@ namespace ccnt {
             }
 
             m_data[hash_index] = HashNode<TValue>(hash_code, std::forward<TValue>(value));
+            std::construct_at(m_data + hash_index, hash_code, std::forward<TValue>(value));
             m_count++;
 
             return m_data[hash_index];
@@ -199,7 +203,6 @@ namespace ccnt {
             }
 
             std::destroy_at(m_data + hash_index);
-            std::memset(m_data + hash_index, 0, sizeof(HashNode<TValue>));
         }
 
         Iterator begin() {
@@ -232,6 +235,7 @@ namespace ccnt {
                         }
                     }
                     m_data[hash_index] = std::move(tmp_data[i]);
+                    std::destroy_at(tmp_data[i]);
                 }
             }
             m_allocator.deallocate(tmp_data, old_capacity);
