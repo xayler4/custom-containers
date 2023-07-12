@@ -235,7 +235,7 @@ namespace ccnt {
                         }
                     }
                     m_data[hash_index] = std::move(tmp_data[i]);
-                    std::destroy_at(tmp_data[i]);
+                    std::destroy_at(tmp_data + i);
                 }
             }
             m_allocator.deallocate(tmp_data, old_capacity);
