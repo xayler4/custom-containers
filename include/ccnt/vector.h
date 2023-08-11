@@ -128,20 +128,22 @@ namespace ccnt {
 
         void swap_and_pop(const TValue& value) {
             assert(m_count != 0);
-            if (m_count == 1) {
-                return pop_back(); 
-            }
             for (std::uint32_t i = 0; i < m_count; i++) {
                 if (m_data[i] == value) {
-                    std::destroy_at(m_data + i);
-                    std::construct_at(m_data + i, std::move(m_data[m_count - 1]));
+                    m_data[m_data[i]] = std::move(m_data[m_count - 1]);
                     return pop_back();
                 }
             }
         }
 
+        void swap_and_pop_at(std::uint32_t index) {
+            assert(index < m_count);
+            m_data[m_data[index]] = std::move(m_data[m_count - 1]);
+            return pop_back();
+        }
+
         void erase(const TValue& value) {
-            assert(m_count);
+            assert(m_count != 0);
             for (std::uint32_t i = 0; i < m_count; i++) {
                 if (m_data[i] == value) {
                     std::destroy_at(m_data + i);
@@ -150,6 +152,13 @@ namespace ccnt {
                     return;
                 }
             }
+        }
+
+        void erase_at(std::uint32_t index) {
+            assert(index < m_count);
+            std::destroy_at(m_data + i);
+            shrink(i);
+            m_count--;
         }
 
         void reserve(std::uint32_t capacity) {
