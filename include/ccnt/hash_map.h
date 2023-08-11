@@ -162,7 +162,7 @@ namespace ccnt {
                 }
             }
 
-            m_data[hash_index] = std::move(HashNode<TValue>(hash_code, value)));
+            m_data[hash_index] = std::move(HashNode<TValue>(hash_code, value));
             m_count++;
 
             return m_data[hash_index];
