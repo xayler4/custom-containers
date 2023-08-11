@@ -25,6 +25,8 @@ namespace ccnt {
         HashNode<TValue>& operator = (HashNode<TValue>&& hash_node) {
             m_hash_code = hash_node.m_hash_code;
             m_value = std::move(hash_node.m_value);
+
+            return *this; 
         }
 
         inline operator TValue&() { return m_value; }
