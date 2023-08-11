@@ -22,7 +22,7 @@ namespace ccnt {
             m_hash_code = 0;
         }
 
-        inline operator = (HashNode<TValue>&& hash_node) {
+        HashNode& operator = (HashNode<TValue>&& hash_node) {
             m_hash_code = hash_node.m_hash_code;
             m_value = std::move(hash_node.m_value);
         }
