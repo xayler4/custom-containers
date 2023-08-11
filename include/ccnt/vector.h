@@ -156,8 +156,8 @@ namespace ccnt {
 
         void erase_at(std::uint32_t index) {
             assert(index < m_count);
-            std::destroy_at(m_data + i);
-            shrink(i);
+            std::destroy_at(m_data + index);
+            shrink(index);
             m_count--;
         }
 
