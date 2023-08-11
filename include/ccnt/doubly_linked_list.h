@@ -18,15 +18,6 @@ namespace ccnt {
             }
         }
 
-        Node(Node<TValue>* previous,  Node<TValue>* next, TValue&& value) : value(std::forward<TValue>(value)), previous(previous), next(next) {
-            if (this->previous != nullptr) {
-                this->previous->next = this;
-            }
-            if (this->next != nullptr) {
-                this->next->previous = this;
-            }
-        }
-
         Node(Node<TValue>* previous,  Node<TValue>* next, const TValue& value) : value(std::move(value)), previous(previous), next(next) {
             if (this->previous != nullptr) {
                 this->previous->next = this;
@@ -129,22 +120,12 @@ namespace ccnt {
             return *new_node;
         }
 
-        Node<TValue>& insert_after(Node<TValue>& previous, TValue&& value) {
-            if (&previous == m_tail) {
-                return insert_at_tail(std::forward<TValue>(value));
-            }
-            Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, &previous, previous.next, std::forward<TValue>(value));
-            m_length++;
-            return *new_node;
-        }
-
         Node<TValue>& insert_after(Node<TValue>& previous, const TValue& value) {
             if (&previous == m_tail) {
                 return insert_at_tail(value);
             }
             Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, &previous, previous.next, value);
+			std::construct_at(new_node, &previous, previous.next, std::move(value));
             m_length++;
             return *new_node;
         }
@@ -161,22 +142,12 @@ namespace ccnt {
             return *new_node;
         }
 
-        Node<TValue>& insert_before(Node<TValue>& next, TValue&& value) {
-            if (&next == m_head) {
-                return insert_at_head(value);
-            }
-            Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, next.previous, &next, std::forward<TValue>(value));
-            m_length++;
-            return *new_node;
-        }
-
         Node<TValue>& insert_before(Node<TValue>& next, const TValue& value) {
             if (&next == m_head) {
                 return insert_at_head(value);
             }
             Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, next.previous, &next, value);
+			std::construct_at(new_node, next.previous, &next, std::move(value));
             m_length++;
             return *new_node;
         }
@@ -196,20 +167,6 @@ namespace ccnt {
             return *m_tail;
         }
 
-        Node<TValue>& insert_at_tail(TValue&& value) {
-            if (m_tail == m_inactive_tail) {
-                std::construct_at(&m_tail->value, std::forward<TValue>(value));
-                m_inactive_tail = nullptr;
-            }
-            else {
-                Node<TValue>* tail = m_allocator.allocate(1);
-                std::construct_at(tail, m_tail, nullptr, std::forward<TValue>(value));
-                m_tail = tail;
-            }
-            m_length++;
-            return *m_tail;
-        }
-
         Node<TValue>& insert_at_tail(const TValue& value) {
             if (m_tail == m_inactive_tail) {
                 m_tail->value = std::move(value);
@@ -217,7 +174,7 @@ namespace ccnt {
             }
             else {
                 Node<TValue>* tail = m_allocator.allocate(1);
-                std::construct_at(tail, m_tail, nullptr, value);
+                std::construct_at(tail, m_tail, nullptr, std::move(value));
                 m_tail = tail;
             }
             m_length++;
@@ -239,20 +196,6 @@ namespace ccnt {
             return *m_head;
         }
 
-        Node<TValue>& insert_at_head(TValue&& value) {
-            if (m_head == m_inactive_head) {
-                std::construct_at(&m_head->value, std::forward<TValue>(value));
-                m_inactive_head = nullptr;
-            }
-            else {
-                Node<TValue>* head = m_allocator.allocate(1);
-			    std::construct_at(head, nullptr, m_head, std::forward<TValue>(value));
-                m_head = head;
-            }
-            m_length++;
-            return *m_head;
-        }
-
         Node<TValue>& insert_at_head(const TValue& value) {
             if (m_head == m_inactive_head) {
                 m_head->value = std::move(value);
@@ -260,7 +203,7 @@ namespace ccnt {
             }
             else {
                 Node<TValue>* head = m_allocator.allocate(1);
-			    std::construct_at(head, nullptr, m_head, value);
+			    std::construct_at(head, nullptr, m_head, std::move(value));
                 m_head = head;
             }
             m_length++;

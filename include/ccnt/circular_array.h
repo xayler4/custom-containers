@@ -87,16 +87,6 @@ namespace ccnt  {
             *(m_current) = std::move(value);
         }
 
-        void push(TValue&& value) {
-            if (m_current == m_data + TCapacity - 1) {
-                m_current = m_data;
-            }
-            else {
-                ++m_current;
-            }
-            *(m_current) = std::move(value);
-        }
-
         inline TValue& operator [] (std::uint32_t index) {
             assert(index < TCapacity);
             return m_data[index];

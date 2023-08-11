@@ -12,13 +12,19 @@ namespace ccnt {
     class HashNode {
     public:
         template<typename... TArgs>
-        HashNode(std::nullptr_t dummy, std::uint32_t hash_code, TArgs... args) : m_hash_code(hash_code), m_value(std::forward<TArgs>(args)...) {}
+        HashNode(std::nullptr_t dummy, std::uint32_t hash_code, TArgs&&... args) : m_hash_code(hash_code), m_value(std::forward<TArgs>(args)...) {}
 
-        HashNode(std::uint32_t hash_code, TValue&& value) : m_value(std::forward<TValue>(value)), m_hash_code(hash_code) {}
+        HashNode(std::uint32_t hash_code, const TValue& value) : m_hash_code(hash_code), m_value(std::move(value)) {}
+        HashNode(HashNode<TValue>&& hash_node) : m_hash_code(hash_node.m_hash_code), m_value(std::move(hash_node.m_value)){
 
-        HashNode(std::uint32_t hash_code, TValue& value) : m_hash_code(hash_code), m_value(value) {}
+        }
         ~HashNode() {
             m_hash_code = 0;
+        }
+
+        inline operator = (HashNode<TValue>&& hash_node) {
+            m_hash_code = hash_node.m_hash_code;
+            m_value = std::move(hash_node.m_value);
         }
 
         inline operator TValue&() { return m_value; }
@@ -139,31 +145,13 @@ namespace ccnt {
                 }
             }
 
-            m_data[hash_index] = HashNode<TValue>(hash_code, std::forward<TArgs>(args)...);
+            m_data[hash_index] = std::move(HashNode<TValue>(hash_code, std::forward<TArgs>(args)...));
             m_count++;
 
             return m_data[hash_index];
         }
 
-        HashNode<TValue>& insert(const TKey& key, TValue&& value ) {
-            std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
-            std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
-
-            while (m_data[hash_index].get_hash_code()) {
-                if (++hash_index == m_capacity) {
-                    grow(m_capacity + (m_capacity * TGrowthFactor));
-                    return insert(key, std::forward<TValue>(value));
-                }
-            }
-
-            m_data[hash_index] = HashNode<TValue>(hash_code, std::forward<TValue>(value));
-            std::construct_at(m_data + hash_index, hash_code, std::forward<TValue>(value));
-            m_count++;
-
-            return m_data[hash_index];
-        }
-
-        HashNode<TValue>& insert(const TKey& key, TValue& value ) {
+        HashNode<TValue>& insert(const TKey& key, const TValue& value ) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
 
@@ -174,7 +162,7 @@ namespace ccnt {
                 }
             }
 
-            m_data[hash_index] = HashNode<TValue>(hash_code, value);
+            m_data[hash_index] = std::move(HashNode<TValue>(hash_code, value)));
             m_count++;
 
             return m_data[hash_index];
@@ -330,15 +318,7 @@ namespace ccnt {
             return node;
         }
 
-        HashNode<TValue>& insert(const TKey& key, TValue&& value ) {
-            std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
-            std::uint32_t hash_index = THashIndex::hash_index(HashCode<TKey>::hash_code(key), TSize);
-            HashNode<TValue>& node = m_data[hash_index].emplace_at_tail(hash_code, std::forward<TValue>(value));
-            m_count++;
-            return node;
-        }
-
-        HashNode<TValue>& insert(const TKey& key, TValue& value ) {
+        HashNode<TValue>& insert(const TKey& key, const TValue& value ) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             std::uint32_t hash_index = THashIndex::hash_index(HashCode<TKey>::hash_code(key), TSize);
             HashNode<TValue>& node = m_data[hash_index].emplace_at_tail(hash_code, value);

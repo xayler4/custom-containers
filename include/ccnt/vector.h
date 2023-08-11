@@ -103,23 +103,6 @@ namespace ccnt {
             return *m_data;
         }
 
-        TValue& push_front(TValue&& value) {
-            if (m_capacity == m_count) {
-                grow_front();
-            }
-            else {
-                if (m_count != 0) {
-                    for (std::uint32_t i = m_count; i != 0; i--) {
-                        m_data[i] = std::move(m_data[i - 1]); 
-                        std::destroy_at(m_data + i - 1);
-                    }
-                }
-            }
-            std::construct_at(m_data, std::move(value));
-            m_count++;
-            return *m_data;
-        }
-
         TValue& push_front(const TValue& value) {
             if (m_capacity == m_count) {
                 grow_front();
@@ -143,20 +126,6 @@ namespace ccnt {
             std::destroy_at(m_data + m_count);
         }
 
-        void swap_and_pop(TValue&& value) {
-            assert(m_count != 0);
-            if (m_count == 1) {
-                return pop_back(); 
-            }
-            for (std::uint32_t i = 0; i < m_count; i++) {
-                if (m_data[i] == value) {
-                    std::destroy_at(m_data + i);
-                    std::construct_at(m_data + i, std::move(m_data[m_count - 1]));
-                    return pop_back();
-                }
-            }
-        }
-
         void swap_and_pop(const TValue& value) {
             assert(m_count != 0);
             if (m_count == 1) {
@@ -167,18 +136,6 @@ namespace ccnt {
                     std::destroy_at(m_data + i);
                     std::construct_at(m_data + i, std::move(m_data[m_count - 1]));
                     return pop_back();
-                }
-            }
-        }
-
-        void erase(TValue&& value) {
-            assert(m_count != 0);
-            for (std::uint32_t i = 0; i < m_count; i++) {
-                if (m_data[i] == value) {
-                    std::destroy_at(m_data + i);
-                    shrink(i);
-                    m_count--;
-                    return;
                 }
             }
         }
