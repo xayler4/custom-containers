@@ -5,7 +5,7 @@
 #include <assert.h>
 
 namespace ccnt {
-    template<typename TValue, float TGrowthFactor = 0.75f, typename TAllocator = std::allocator<TValue>>
+    template<typename TValue, float TGrowthFactor = 1.0f, typename TAllocator = std::allocator<TValue>>
     class Vector  {
     public:
         class Iterator {
@@ -55,8 +55,8 @@ namespace ccnt {
 
         Vector(Vector&& vector) : m_data(vector.m_data), m_capacity(vector.m_capacity), m_count(vector.m_count), m_allocator(vector.m_allocator){
             vector.m_data = nullptr;
-            vector.m_capacity = 0;
             vector.m_count = 0;
+            vector.m_capacity = 0;
         }
 
         ~Vector() {
@@ -167,7 +167,8 @@ namespace ccnt {
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < m_count; i++) {
-                m_data[i] = std::move(tmp_data[i]);
+                std::construct_at(m_data + i, std::move(tmp_data[i]));
+                std::destroy_at(tmp_data + i);
             }
             m_allocator.deallocate(tmp_data, m_capacity);
         }
@@ -225,7 +226,8 @@ namespace ccnt {
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < m_count; i++) {
-                m_data[i] = std::move(tmp_data[i]);
+                std::construct_at(m_data + i, std::move(tmp_data[i]));
+                std::destroy_at(tmp_data + i);
             }
             m_allocator.deallocate(tmp_data, m_capacity - (m_capacity * TGrowthFactor));
         }
@@ -235,7 +237,8 @@ namespace ccnt {
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < m_count; i++) {
-                m_data[i + 1] = std::move(tmp_data[i]);
+                std::construct_at(m_data + i + 1, std::move(tmp_data[i]));
+                std::destroy_at(tmp_data + i);
             }
             m_allocator.deallocate(tmp_data, m_capacity - (m_capacity * TGrowthFactor));
         }
@@ -245,10 +248,12 @@ namespace ccnt {
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < index; i++) {
-                m_data[i] = std::move(tmp_data[i]);
+                std::construct_at(m_data + i, std::move(tmp_data[i]));
+                std::destroy_at(tmp_data + i);
             }
             for (std::uint32_t i = index + 1; i < m_count; i++) {
-                m_data[i - 1] = std::move(tmp_data[i]);
+                std::construct_at(m_data + i  - 1, std::move(tmp_data[i]));
+                std::destroy_at(tmp_data + i);
             }
             m_allocator.deallocate(tmp_data, m_capacity + 1);
         }
