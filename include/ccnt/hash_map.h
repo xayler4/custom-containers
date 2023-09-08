@@ -22,13 +22,6 @@ namespace ccnt {
             m_hash_code = 0;
         }
 
-        HashNode<TValue>& operator = (HashNode<TValue>&& hash_node) {
-            m_hash_code = hash_node.m_hash_code;
-            m_value = std::move(hash_node.m_value);
-
-            return *this; 
-        }
-
         inline operator TValue&() { return m_value; }
         inline std::uint32_t get_hash_code() { return m_hash_code; }
         inline TValue& get_value() { return m_value; }
@@ -147,7 +140,7 @@ namespace ccnt {
                 }
             }
 
-            m_data[hash_index] = std::move(HashNode<TValue>(hash_code, std::forward<TArgs>(args)...));
+            std::construct_at(m_data + hash_index, std::move(HashNode<TValue>(hash_code, std::forward<TArgs>(args)...)));
             m_count++;
 
             return m_data[hash_index];
@@ -164,7 +157,7 @@ namespace ccnt {
                 }
             }
 
-            m_data[hash_index] = std::move(HashNode<TValue>(hash_code, value));
+            std::construct_at(m_data + hash_index, std::move(HashNode<TValue>(hash_code, value)));
             m_count++;
 
             return m_data[hash_index];
@@ -224,7 +217,7 @@ namespace ccnt {
                             return;
                         }
                     }
-                    m_data[hash_index] = std::move(tmp_data[i]);
+                    std::construct_at(m_data + hash_index, std::move(tmp_data[i]));
                     std::destroy_at(tmp_data + i);
                 }
             }

@@ -92,9 +92,9 @@ namespace ccnt {
             }
             else {
                 if (m_count != 0) {
-                    for (std::uint32_t i = m_count; i != 0; i--) {
+                    std::construct_at(m_data + m_count, std::move(m_data[m_count - 1]));
+                    for (std::uint32_t i = m_count - 1; i != 0; i--) {
                         m_data[i] = std::move(m_data[i - 1]); 
-                        std::destroy_at(m_data + i - 1);
                     }
                 }
             }
@@ -109,9 +109,9 @@ namespace ccnt {
             }
             else {
                 if (m_count != 0) {
-                    for (std::uint32_t i = m_count; i != 0; i--) {
+                    std::construct_at(m_data + m_count, std::move(m_data[m_count - 1]));
+                    for (std::uint32_t i = m_count - 1; i != 0; i--) {
                         m_data[i] = std::move(m_data[i - 1]); 
-                        std::destroy_at(m_data + i - 1);
                     }
                 }
             }
