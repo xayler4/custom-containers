@@ -12,14 +12,23 @@ namespace ccnt {
     class HashNode {
     public:
         template<typename... TArgs>
-        HashNode(std::nullptr_t dummy, std::uint32_t hash_code, TArgs&&... args) : m_hash_code(hash_code), m_value(std::forward<TArgs>(args)...) {}
-
-        HashNode(std::uint32_t hash_code, const TValue& value) : m_hash_code(hash_code), m_value(std::move(value)) {}
-        HashNode(HashNode<TValue>&& hash_node) : m_hash_code(hash_node.m_hash_code), m_value(std::move(hash_node.m_value)){
-
+        HashNode(std::uint32_t hash_code, TArgs&&... args) : m_hash_code(hash_code), m_value(std::forward<TArgs>(args)...) {
         }
+
+        HashNode(std::uint32_t hash_code, const TValue& value) : m_hash_code(hash_code), m_value(std::move(value)) {
+        }
+
+        HashNode(HashNode<TValue>&& hash_node) : m_hash_code(hash_node.m_hash_code), m_value(std::move(hash_node.m_value)){
+        }
+
         ~HashNode() {
             m_hash_code = 0;
+        }
+
+        inline HashNode<TValue>& operator = (TValue&& value) {
+            m_value = std::move(value);
+
+            return *this;
         }
 
         inline operator TValue&() { return m_value; }
@@ -131,6 +140,7 @@ namespace ccnt {
         template<typename... TArgs>
         HashNode<TValue>& emplace(const TKey& key, TArgs&&... args) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
+            assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
 
             while (m_data[hash_index].get_hash_code()) {
@@ -140,7 +150,7 @@ namespace ccnt {
                 }
             }
 
-            std::construct_at(m_data + hash_index, std::move(HashNode<TValue>(hash_code, std::forward<TArgs>(args)...)));
+            std::construct_at(m_data + hash_index, hash_code, std::forward<TArgs>(args)...);
             m_count++;
 
             return m_data[hash_index];
@@ -148,6 +158,7 @@ namespace ccnt {
 
         HashNode<TValue>& insert(const TKey& key, const TValue& value ) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
+            assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
 
             while (m_data[hash_index].get_hash_code()) {
@@ -157,7 +168,7 @@ namespace ccnt {
                 }
             }
 
-            std::construct_at(m_data + hash_index, std::move(HashNode<TValue>(hash_code, value)));
+            std::construct_at(m_data + hash_index, hash_code, std::move(value));
             m_count++;
 
             return m_data[hash_index];
@@ -165,6 +176,7 @@ namespace ccnt {
 
         HashNode<TValue>& operator [] (const TKey& key) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
+            assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
             
             while (m_data[hash_index].get_hash_code() != hash_code) {
@@ -178,6 +190,7 @@ namespace ccnt {
 
         void remove(const TKey& key) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
+            assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
 
             while (m_data[hash_index].get_hash_code() != hash_code) {
