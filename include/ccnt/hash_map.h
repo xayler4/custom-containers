@@ -31,6 +31,10 @@ namespace ccnt {
             return *this;
         }
 
+        inline void set_hash_code(std::uint32_t hash_code) {
+            m_hash_code = hash_code;
+        }
+
         inline operator TValue&() { return m_value; }
         inline std::uint32_t get_hash_code() { return m_hash_code; }
         inline TValue& get_value() { return m_value; }
@@ -120,7 +124,7 @@ namespace ccnt {
     public:
         HashMapOpenAddressing() : m_count(0), m_capacity(16) {
             m_data = m_allocator.allocate(m_capacity);
-            std::memset(m_data, 0, m_capacity * sizeof(HashNode<TValue>));
+            clear_hash_codes();
         }
 
         ~HashMapOpenAddressing() {
@@ -218,7 +222,7 @@ namespace ccnt {
             m_capacity = new_capacity;
             HashNode<TValue>* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
-            std::memset(m_data, 0, m_capacity * sizeof(HashNode<TValue>));
+            clear_hash_codes();
 
             for (std::uint32_t i = 0; i < old_capacity; i++) {
                 if (tmp_data[i].get_hash_code()) {
@@ -235,6 +239,12 @@ namespace ccnt {
                 }
             }
             m_allocator.deallocate(tmp_data, old_capacity);
+        }
+
+        inline void clear_hash_codes() {
+            for (std::uint32_t i = 0; i < m_capacity; i++) {
+                m_data[i].set_hash_code(0);
+            } 
         }
 
     private:
