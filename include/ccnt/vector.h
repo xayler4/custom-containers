@@ -222,7 +222,7 @@ namespace ccnt {
 
     private:
         void grow() {
-            std::uint32_t old_capacity = capacity;
+            std::uint32_t old_capacity = m_capacity;
             m_capacity *= 2;
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
@@ -234,7 +234,7 @@ namespace ccnt {
         }
 
         void grow_front() {
-            std::uint32_t old_capacity = capacity;
+            std::uint32_t old_capacity = m_capacity;
             m_capacity *= 2;
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
