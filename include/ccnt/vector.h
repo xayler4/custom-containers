@@ -5,8 +5,8 @@
 #include <assert.h>
 
 namespace ccnt {
-    template<typename TValue, float TGrowthFactor = 1.0f, typename TAllocator = std::allocator<TValue>>
-    class Vector  {
+    template<typename TValue, typename TAllocator = std::allocator<TValue>>
+    class Vector {
     public:
         class Iterator {
         public:
@@ -222,25 +222,27 @@ namespace ccnt {
 
     private:
         void grow() {
-            m_capacity += m_capacity * TGrowthFactor;
+            std::uint32_t old_capacity = capacity;
+            m_capacity *= 2;
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < m_count; i++) {
                 std::construct_at(m_data + i, std::move(tmp_data[i]));
                 std::destroy_at(tmp_data + i);
             }
-            m_allocator.deallocate(tmp_data, m_capacity - (m_capacity * TGrowthFactor));
+            m_allocator.deallocate(tmp_data, old_capacity);
         }
 
         void grow_front() {
-            m_capacity += m_capacity * TGrowthFactor;
+            std::uint32_t old_capacity = capacity;
+            m_capacity *= 2;
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < m_count; i++) {
                 std::construct_at(m_data + i + 1, std::move(tmp_data[i]));
                 std::destroy_at(tmp_data + i);
             }
-            m_allocator.deallocate(tmp_data, m_capacity - (m_capacity * TGrowthFactor));
+            m_allocator.deallocate(tmp_data, old_capacity);
         }
 
         void shrink(std::uint32_t index) {
