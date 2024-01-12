@@ -13,8 +13,8 @@ namespace ccnt {
     class Bitmask {
     public:
         static constexpr std::uint32_t size() {
-            float i = (float)TBits / 64;
-            return ceil(TBits);
+            float size = static_cast<float>(TBits) / 64;
+            return ceil(size);
         } 
         using uint_t = std::conditional_t<(TBits <= 8), std::uint8_t,
                 std::conditional_t<(TBits <= 16), std::uint16_t,

@@ -173,9 +173,12 @@ namespace ccnt {
             m_allocator.deallocate(tmp_data, m_capacity);
         }
 
-        void resize(std::uint32_t size) {
+        void resize(std::uint32_t size, TValue c = TValue()) {
             if (m_capacity < size) {
                 reserve(size);
+            }
+            for (std::uint32_t i = m_count; i < size; i++) {
+                std::construct_at(m_data + i, c);
             }
             m_count = size;
         }
