@@ -83,7 +83,7 @@ namespace ccnt {
                 return m_data; 
             }
 
-            void operator ++ () const {
+            void operator ++ () {
                 m_data++;
             }
 

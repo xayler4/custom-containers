@@ -11,7 +11,7 @@ namespace ccnt  {
     public:
         class Iterator {
         public:
-            using Type = ::ccnt::IndexableIterator;
+            using Type = IndexableIterator;
             using ValueType = TValue;
             using Pointer   = TValue*;
             using Reference = TValue&;
@@ -64,7 +64,7 @@ namespace ccnt  {
 
         class ConstIterator {
         public:
-            using Type = ::ccnt::IndexableIterator;
+            using Type = IndexableIterator;
             using ValueType = const TValue;
             using Pointer   = const TValue*;
             using Reference = const TValue&;
