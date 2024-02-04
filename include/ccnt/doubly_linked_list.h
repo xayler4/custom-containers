@@ -137,9 +137,9 @@ namespace ccnt {
         class Iterator {
         public:
             using Type = ListIterator;
-            using ValueType = ::ccnt::Node<TValue>;
-            using Pointer   = ::ccnt::Node<TValue>*;
-            using Reference = ::ccnt::Node<TValue>&;
+            using ValueType = Node<TValue>;
+            using Pointer   = Node<TValue>*;
+            using Reference = Node<TValue>&;
 
         public:
             Iterator(Pointer node) : m_node(node) {
@@ -174,9 +174,9 @@ namespace ccnt {
         class ReverseIterator {
         public:
             using Type = ListIterator;
-            using ValueType = ::ccnt::Node<TValue>;
-            using Pointer   = ::ccnt::Node<TValue>*;
-            using Reference = ::ccnt::Node<TValue>&;
+            using ValueType = Node<TValue>;
+            using Pointer   = Node<TValue>*;
+            using Reference = Node<TValue>&;
 
         public:
             ReverseIterator(Pointer node) : m_node(node) {
@@ -212,12 +212,12 @@ namespace ccnt {
         class ConstIterator {
         public:
             using Type = ListIterator;
-            using ValueType = const ::ccnt::Node<TValue>;
-            using Pointer   = const ::ccnt::Node<TValue>*;
-            using Reference = const ::ccnt::Node<TValue>&;
+            using ValueType = const Node<TValue>;
+            using Pointer   = const Node<TValue>*;
+            using Reference = const Node<TValue>&;
 
         public:
-            ConstIterator(Pointer node) : m_node(node) {
+            ConstIterator(Node<TValue>* node) : m_node(node) {
             };
 
             ~ConstIterator() = default;
@@ -249,12 +249,12 @@ namespace ccnt {
         class ConstReverseIterator : public ConstIterator {
         public:
             using Type = ListIterator;
-            using ValueType = const ::ccnt::Node<TValue>;
-            using Pointer   = const ::ccnt::Node<TValue>*;
-            using Reference = const ::ccnt::Node<TValue>&;
+            using ValueType = const Node<TValue>;
+            using Pointer   = const Node<TValue>*;
+            using Reference = const Node<TValue>&;
 
         public:
-            ConstReverseIterator(Pointer node) : ConstIterator(node) {
+            ConstReverseIterator(Node<TValue>* node) : ConstIterator(node) {
             };
 
             ~ConstReverseIterator() = default;

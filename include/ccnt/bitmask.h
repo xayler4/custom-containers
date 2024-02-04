@@ -95,7 +95,7 @@ namespace ccnt {
     public:
         class Iterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = bool;
             using Pointer   = Proxy;
             using Reference = Proxy;
@@ -131,7 +131,7 @@ namespace ccnt {
 
         class ReverseIterator : public Iterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = bool;
             using Pointer   = Proxy;
             using Reference = Proxy;
@@ -163,7 +163,7 @@ namespace ccnt {
 
         class ConstIterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = bool;
             using Pointer   = bool;
             using Reference = bool;
@@ -199,7 +199,7 @@ namespace ccnt {
 
         class ConstReverseIterator : public ConstIterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = bool;
             using Pointer   = bool;
             using Reference = bool;

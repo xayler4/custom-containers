@@ -70,7 +70,7 @@ namespace ccnt  {
             using Reference = const TValue&;
 
         public:
-            ConstIterator(Pointer data) : m_data(data) {
+            ConstIterator(TValue* data) : m_data(data) {
             };
 
             ~ConstIterator() = default;
@@ -107,7 +107,7 @@ namespace ccnt  {
             using Reference = const TValue&;
 
         public:
-            ConstReverseIterator(Pointer pointer) : ConstIterator(pointer) {}
+            ConstReverseIterator(TValue* pointer) : ConstIterator(pointer) {}
             ~ConstReverseIterator() = default;
 
             void operator ++ () {

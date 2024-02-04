@@ -11,7 +11,7 @@ namespace ccnt {
     public:
         class Iterator {
         public:
-            using Type = ::ccnt::IndexableIterator;
+            using Type = IndexableIterator;
             using ValueType = TValue;
             using Pointer   = TValue*;
             using Reference = TValue&;
@@ -48,7 +48,7 @@ namespace ccnt {
 
         class ReverseIterator : public Iterator {
         public:
-            using Type = ::ccnt::ReverseIndexableIterator;
+            using Type = ReverseIndexableIterator;
             using ValueType = TValue;
             using Pointer   = TValue*;
             using Reference = TValue&;
@@ -64,13 +64,13 @@ namespace ccnt {
 
         class ConstIterator {
         public:
-            using Type = ::ccnt::IndexableIterator;
+            using Type = IndexableIterator;
             using ValueType = const TValue;
             using Pointer   = const TValue*;
             using Reference = const TValue&;
 
         public:
-            ConstIterator(Pointer data) : m_data(data) {
+            ConstIterator(TValue* data) : m_data(data) {
             };
 
             ~ConstIterator() = default;
@@ -101,13 +101,13 @@ namespace ccnt {
 
         class ConstReverseIterator : public ConstIterator {
         public:
-            using Type = ::ccnt::ReverseIndexableIterator;
+            using Type = ReverseIndexableIterator;
             using ValueType = const TValue;
             using Pointer   = const TValue*;
             using Reference = const TValue&;
 
         public:
-            ConstReverseIterator() : ConstIterator() {}
+            ConstReverseIterator(TValue* data) : ConstIterator(data) {}
             ~ConstReverseIterator() = default;
 
             void operator ++ () {

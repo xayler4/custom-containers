@@ -94,7 +94,7 @@ namespace ccnt {
 
         class Iterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = HashNode<TKey, TValue>;
             using Pointer   = HashNode<TKey, TValue>*;
             using Reference = HashNode<TKey, TValue>&;
@@ -160,7 +160,7 @@ namespace ccnt {
 
         class ReverseIterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = HashNode<TKey, TValue>;
             using Pointer   = HashNode<TKey, TValue>*;
             using Reference = HashNode<TKey, TValue>&;
@@ -226,13 +226,13 @@ namespace ccnt {
 
         class ConstIterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = const HashNode<TKey, TValue>;
             using Pointer   = const HashNode<TKey, TValue>*;
             using Reference = const HashNode<TKey, TValue>&;
 
         public:
-            ConstIterator(Pointer data, const Pointer& head) : m_data(data), m_head(head) {
+            ConstIterator(HashNode<TKey, TValue>* data, const Pointer& head) : m_data(data), m_head(head) {
             };
             ~ConstIterator() = default;
 
@@ -293,13 +293,13 @@ namespace ccnt {
 
         class ConstReverseIterator {
         public:
-            using Type = ::ccnt::SparseIterator;
+            using Type = SparseIterator;
             using ValueType = const HashNode<TKey, TValue>;
             using Pointer   = const HashNode<TKey, TValue>*;
             using Reference = const HashNode<TKey, TValue>&;
 
         public:
-            ConstReverseIterator(Pointer data, const Pointer& head) : m_data(data), m_head(head) {
+            ConstReverseIterator(HashNode<TKey, TValue>* data, const Pointer& head) : m_data(data), m_head(head) {
             };
             ~ConstReverseIterator() = default;
 
