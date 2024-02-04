@@ -1,12 +1,12 @@
 #pragma once
 
-#include <iostream>
 #include <cmath>
 #include <cstdint>
 #include <utility>
 #include <memory>
 #include <array>
 #include <assert.h>
+#include "algorithm.h"
 
 namespace ccnt {
     template<std::uint32_t TBits>
@@ -16,22 +16,99 @@ namespace ccnt {
             float size = static_cast<float>(TBits) / 64;
             return ceil(size);
         } 
+
         using uint_t = std::conditional_t<(TBits <= 8), std::uint8_t,
                 std::conditional_t<(TBits <= 16), std::uint16_t,
                 std::conditional_t<(TBits <= 32), std::uint32_t,
                 std::conditional_t<(TBits <= 64), std::uint64_t,
                 std::array<uint64_t, size()>>>>>;
 
+    public:
+        class Proxy {
+        public:
+            inline Proxy(uint_t* bitmask, std::uint32_t nbit) : m_bitmask(bitmask), m_nbit(nbit) {}
+            inline Proxy& operator = (const Proxy& proxy) {
+                if (proxy) {
+                    reinterpret_cast<Bitmask<TBits>*>(m_bitmask)->set_bit(m_nbit); 
+                }
+                else {
+                    reinterpret_cast<Bitmask<TBits>*>(m_bitmask)->unset_bit(m_nbit); 
+                }
+
+                return *this;
+            }
+
+            inline Proxy& operator = (bool value) {
+                if (value) {
+                    reinterpret_cast<Bitmask<TBits>*>(m_bitmask)->set_bit(m_nbit); 
+                }
+                else {
+                    reinterpret_cast<Bitmask<TBits>*>(m_bitmask)->unset_bit(m_nbit); 
+                }
+
+                return *this;
+            }
+
+            inline bool operator < (const Proxy& proxy) {
+                return static_cast<bool>(*this) < static_cast<bool>(proxy);
+            }
+
+            template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint8_t>::value, std::nullptr_t>::type = nullptr>
+            inline operator bool() const {
+                assert(m_nbit < TBits);
+                return (*m_bitmask << (m_nbit + (sizeof(uint_t) * 8 - TBits))) & 0x80;
+            }
+
+            template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint16_t>::value, std::nullptr_t>::type = nullptr>
+            inline operator bool() const {
+                assert(m_nbit < TBits);
+                return (*m_bitmask << (m_nbit + (sizeof(uint_t) * 8 - TBits))) & 0x8000;
+            }
+
+            template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint32_t>::value, std::nullptr_t>::type = nullptr>
+            inline operator bool() const {
+                assert(m_nbit < TBits);
+                return (*m_bitmask << (m_nbit + (sizeof(uint_t) * 8 - TBits))) & 0x80000000;
+            }
+
+            template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint64_t>::value, std::nullptr_t>::type = nullptr>
+            inline operator bool() const {
+                assert(m_nbit < TBits);
+                return (*m_bitmask << (m_nbit + (sizeof(uint_t) * 8 - TBits))) & 0x8000000000000000;
+            }
+
+            template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+            inline operator bool() const {
+                assert(m_nbit < TBits);
+                std::uint32_t index = 0;
+                if (m_nbit != 0) {
+                    index = m_nbit/64;
+                }
+                return ((*m_bitmask)[index] << (m_nbit + (sizeof(uint_t) * 8 - (TBits - (index * 64))))) & 0x8000000000000000;
+            }
+
+        private:
+            uint_t* m_bitmask;
+            std::uint32_t m_nbit;
+        };
+
+    public:
         class Iterator {
+        public:
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = bool;
+            using Pointer   = Proxy;
+            using Reference = Proxy;
+
         public:
             Iterator(Bitmask<TBits>* bitmask, std::uint32_t nbit) : m_bitmask(bitmask), m_nbit(nbit) {}
             ~Iterator() = default;
 
-            bool operator * () {
+            Reference operator * () {
                 return (*m_bitmask)[m_nbit];
             }
 
-            bool operator -> () {
+            Pointer operator -> () {
                 return (*m_bitmask)[m_nbit];
             }
 
@@ -47,9 +124,109 @@ namespace ccnt {
                 return ((it.m_bitmask == m_bitmask) && (m_nbit == it.m_nbit));
             }
 
-        private:
+        protected:
             Bitmask<TBits>* m_bitmask;
             std::uint32_t m_nbit;
+        };
+
+        class ReverseIterator : public Iterator {
+        public:
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = bool;
+            using Pointer   = Proxy;
+            using Reference = Proxy;
+
+        public:
+            ReverseIterator(Bitmask<TBits>* bitmask, std::uint32_t nbit) : Iterator(bitmask, nbit) {}
+            ~ReverseIterator() = default;
+
+            Reference operator * () {
+                return (*Iterator::m_bitmask)[Iterator::m_nbit - 1];
+            }
+
+            Pointer operator -> () {
+                return (*m_bitmask)[Iterator::m_nbit - 1];
+            }
+
+            void operator ++ () {
+                Iterator::m_nbit--;
+            }
+
+            bool operator != (const ReverseIterator& it ) const {
+                return ((it.m_bitmask != Iterator::m_bitmask) || (Iterator::m_nbit != it.m_nbit));
+            }
+
+            bool operator == (const ReverseIterator& it ) const {
+                return ((it.m_bitmask == Iterator::m_bitmask) && (Iterator::m_nbit == it.m_nbit));
+            }
+        };
+
+        class ConstIterator {
+        public:
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = bool;
+            using Pointer   = bool;
+            using Reference = bool;
+
+        public:
+            ConstIterator(const Bitmask<TBits>* bitmask, std::uint32_t nbit) : m_bitmask(bitmask), m_nbit(nbit) {}
+            ~ConstIterator() = default;
+
+            Reference operator * () const {
+                return (*m_bitmask)[m_nbit];
+            }
+
+            Pointer operator -> () const {
+                return (*m_bitmask)[m_nbit];
+            }
+
+            void operator ++ () {
+                m_nbit++;
+            }
+
+            bool operator != (const ConstIterator& it ) const {
+                return ((it.m_bitmask != m_bitmask) || (m_nbit != it.m_nbit));
+            }
+
+            bool operator == (const ConstIterator& it ) const {
+                return ((it.m_bitmask == m_bitmask) && (m_nbit == it.m_nbit));
+            }
+
+        protected:
+            const Bitmask<TBits>* m_bitmask;
+            std::uint32_t m_nbit;
+        };
+
+        class ConstReverseIterator : public ConstIterator {
+        public:
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = bool;
+            using Pointer   = bool;
+            using Reference = bool;
+
+        public:
+            ConstReverseIterator(const Bitmask<TBits>* bitmask, std::uint32_t nbit) : ConstIterator(bitmask, nbit) {}
+            ~ConstReverseIterator() = default;
+
+            Reference operator * () {
+                return (*ConstIterator::m_bitmask)[ConstIterator::m_nbit - 1];
+            }
+
+            Pointer operator -> () {
+                return (*ConstIterator::m_bitmask)[ConstIterator::m_nbit - 1];
+            }
+
+            void operator ++ () {
+                ConstIterator::m_nbit--;
+            }
+
+            bool operator != (const ConstReverseIterator& it ) const {
+                return ((it.m_bitmask != ConstIterator::m_bitmask) || (ConstIterator::m_nbit != it.m_nbit));
+            }
+
+            bool operator == (const ConstReverseIterator& it ) const {
+                return ((it.m_bitmask == ConstIterator::m_bitmask) && (ConstIterator::m_nbit == it.m_nbit));
+            }
         };
 
     public:
@@ -180,33 +357,67 @@ namespace ccnt {
         }
         
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint8_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator [] (std::uint32_t nbit) const {
+        inline bool operator[] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x80;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint16_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator [] (std::uint32_t nbit) const {
+        inline bool operator[] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x8000;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint32_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator [] (std::uint32_t nbit) const {
+        inline bool operator[] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x80000000;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint64_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator [] (std::uint32_t nbit) const {
+        inline bool operator[] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x8000000000000000;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator [] (std::uint32_t nbit) const {
+        inline bool operator[] (std::uint32_t nbit) const {
             assert(nbit < TBits);
-            return (m_bitmask[nbit/64] << (nbit + (sizeof(uint_t) * 8 - (TBits - (nbit/64 * 64))))) & 0x8000000000000000;
+            std::uint32_t index = 0;
+            if (nbit != 0) {
+                index = nbit / 64;
+            }
+            return (m_bitmask[index] << (nbit + (sizeof(uint_t) * 8 - (TBits - (index * 64))))) & 0x8000000000000000;
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint8_t>::value, std::nullptr_t>::type = nullptr>
+        inline Proxy operator [] (std::uint32_t nbit) {
+            assert(nbit < TBits);
+            return Proxy(&m_bitmask, nbit);
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint16_t>::value, std::nullptr_t>::type = nullptr>
+        inline Proxy operator [] (std::uint32_t nbit) {
+            assert(nbit < TBits);
+            return Proxy(&m_bitmask, nbit);
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint32_t>::value, std::nullptr_t>::type = nullptr>
+        inline Proxy operator [] (std::uint32_t nbit) {
+            assert(nbit < TBits);
+            return Proxy(&m_bitmask, nbit);
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint64_t>::value, std::nullptr_t>::type = nullptr>
+        inline Proxy operator [] (std::uint32_t nbit) {
+            assert(nbit < TBits);
+            return Proxy(&m_bitmask, nbit);
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline Proxy operator [] (std::uint32_t nbit) {
+            assert(nbit < TBits);
+            return Proxy(&m_bitmask, nbit);
         }
 
         template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
@@ -218,7 +429,10 @@ namespace ccnt {
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline void set_bit(std::uint32_t nbit) {
             assert(nbit < TBits);
-            std::uint32_t index = nbit/64;
+            std::uint32_t index = 0;
+            if (nbit != 0) {
+                index = nbit/64;
+            }
             m_bitmask[index] |= 1ULL << ((TBits - 1) - nbit - (index * 64)); 
         }
 
@@ -231,8 +445,11 @@ namespace ccnt {
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline void unset_bit(std::uint32_t nbit) {
             assert(nbit < TBits);
-            std::uint32_t index = nbit/64;
-            m_bitmask[index] |= ~(1ULL << ((TBits - 1) - nbit - (index * 64)));
+            std::uint32_t index = 0;
+            if (nbit != 0) {
+                index = nbit/64;
+            }
+            m_bitmask[index] &= ~(1ULL << ((TBits - 1) - nbit - (index * 64)));
         }
 
         Iterator begin() {
@@ -241,6 +458,38 @@ namespace ccnt {
 
         Iterator end() {
             return Iterator(this, TBits);
+        }
+
+        ConstIterator begin() const {
+            return ConstIterator(this, 0);
+        }
+
+        ConstIterator end() const {
+            return ConstIterator(this, TBits);
+        }
+
+        ConstIterator cbegin() const {
+            return ConstIterator(this, 0);
+        }
+
+        ConstIterator cend() const {
+            return ConstIterator(this, TBits);
+        }
+
+        ReverseIterator rbegin() {
+            return ReverseIterator(this, TBits);
+        }
+
+        ReverseIterator rend() {
+            return ReverseIterator(this, 0);
+        }
+
+        ConstReverseIterator crbegin() const {
+            return ConstReverseIterator(this, TBits);
+        }
+
+        ConstReverseIterator crend() const {
+            return ConstReverseIterator(this, 0);
         }
 
     private:

@@ -1,31 +1,37 @@
 #pragma once
 
-#include "doubly_linked_list.h"
 #include <memory>
 #include <cstdint>
 #include <utility>
 #include <cstring>
 #include <assert.h>
+#include "algorithm.h"
 
 namespace ccnt {
-    template<typename TValue> 
+    template<typename TKey, typename TValue> 
     class HashNode {
     public:
         template<typename... TArgs>
-        HashNode(std::uint32_t hash_code, TArgs&&... args) : m_hash_code(hash_code), m_value(std::forward<TArgs>(args)...) {
+        HashNode(std::uint32_t hash_code, const TKey& key, TArgs&&... args) : m_hash_code(hash_code), m_key(std::move(key)), m_value(std::forward<TArgs>(args)...) {
         }
 
-        HashNode(std::uint32_t hash_code, const TValue& value) : m_hash_code(hash_code), m_value(std::move(value)) {
+        HashNode(std::uint32_t hash_code, const TKey& key, const TValue& value) : m_hash_code(hash_code), m_key(std::move(key)), m_value(std::move(value)) {
         }
 
-        HashNode(HashNode<TValue>&& hash_node) : m_hash_code(hash_node.m_hash_code), m_value(std::move(hash_node.m_value)){
+        HashNode(HashNode<TKey, TValue>&& hash_node) : m_hash_code(hash_node.m_hash_code), m_key(std::move(hash_node.m_key)), m_value(std::move(hash_node.m_value)) {
         }
 
         ~HashNode() {
             m_hash_code = 0;
         }
 
-        inline HashNode<TValue>& operator = (TValue&& value) {
+        inline HashNode<TKey, TValue>& operator = (HashNode<TKey, TValue>&& hash_node) {
+            m_value = std::move(hash_node.m_value);
+
+            return *this;
+        }
+
+        inline HashNode<TKey, TValue>& operator = (TValue&& value) {
             m_value = std::move(value);
 
             return *this;
@@ -35,12 +41,33 @@ namespace ccnt {
             m_hash_code = hash_code;
         }
 
-        inline operator TValue&() { return m_value; }
-        inline std::uint32_t get_hash_code() { return m_hash_code; }
-        inline TValue& get_value() { return m_value; }
+        inline operator TValue&() { 
+            return m_value; 
+        }
+
+        inline operator const TValue&() const { 
+            return m_value; 
+        }
+
+        inline std::uint32_t get_hash_code() const { 
+            return m_hash_code; 
+        }
+
+        inline const TKey& get_key() const { 
+            return m_key; 
+        }
+
+        inline TValue& get_value() { 
+            return m_value; 
+        }
+
+        inline const TValue& get_value() const { 
+            return m_value; 
+        }
 
     private:
         TValue m_value;
+        TKey m_key;
         std::uint32_t m_hash_code;
     };
 
@@ -59,20 +86,21 @@ namespace ccnt {
         }
     };
 
-    template<typename TValue, typename TKey, float TGrowthFactor = 0.75f, typename THashIndex = DivisionHashIndex, typename TAllocator = std::allocator<HashNode<TValue>>>
-    class HashMapOpenAddressing {
+    template<typename TKey, typename TValue, typename THashIndex = DivisionHashIndex, typename TAllocator = std::allocator<HashNode<TKey, TValue>>>
+    class HashMap {
     public:
         using Value = TValue;
         using Key   = TKey;
 
         class Iterator {
         public:
-            using ValueType = HashNode<TValue>;
-            using Pointer   = HashNode<TValue>*;
-            using Reference = HashNode<TValue>&;
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = HashNode<TKey, TValue>;
+            using Pointer   = HashNode<TKey, TValue>*;
+            using Reference = HashNode<TKey, TValue>&;
 
         public:
-            Iterator(Pointer data) : m_data(data) {
+            Iterator(Pointer data, const Pointer& head) : m_data(data), m_head(head) {
             };
             ~Iterator() = default;
 
@@ -94,40 +122,249 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
+                do {
+                    m_data++;
+                } while (!(m_data->get_hash_code()) && m_data != m_head);
             }
 
             bool operator == (const Iterator& it) {
-                while (m_data != it.m_data) {
-                    m_data++;
-                    if (m_data->get_hash_code()) {
-                        return false;
-                    }
+                if (m_data == it.m_data) {
+                    return true;
                 }
-
-                return true;
-            }
-
-            bool operator != (const Iterator& it) {
-                while (m_data != it.m_data) {
+                while (!(m_data->get_hash_code())) {
                     m_data++;
-                    if (m_data->get_hash_code()) {
+                    if (m_data == it.m_data) {
                         return true;
                     }
                 }
                 return false;
             }
 
+            bool operator != (const Iterator& it) {
+                if (m_data == it.m_data) {
+                    return false;
+                }
+                while (!(m_data->get_hash_code())) {
+                    m_data++;
+                    if (m_data == it.m_data) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+        public:
+            Pointer m_data;
+            const Pointer& m_head;
+        };
+
+        class ReverseIterator {
+        public:
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = HashNode<TKey, TValue>;
+            using Pointer   = HashNode<TKey, TValue>*;
+            using Reference = HashNode<TKey, TValue>&;
+
+        public:
+            ReverseIterator(Pointer data, const Pointer& head) : m_data(data), m_head(head) {
+            };
+            ~ReverseIterator() = default;
+
+            Reference operator * () {
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                }
+                return *m_data;
+            }
+
+            Pointer operator -> () {
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                }
+                return m_data; 
+            }
+
+            void operator ++ () {
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                }
+                do {
+                    m_data--;
+                } while (!(m_data->get_hash_code()) && m_data != m_head);
+            }
+
+            bool operator == (const ReverseIterator& it) {
+                if (m_data == it.m_data) {
+                    return true;
+                }
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                    if (m_data == it.m_data) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            bool operator != (const ReverseIterator& it) {
+                if (m_data == it.m_data) {
+                    return false;
+                }
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                    if (m_data == it.m_data) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
         private:
             Pointer m_data;
+            const Pointer& m_head;
+        };
+
+        class ConstIterator {
+        public:
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = const HashNode<TKey, TValue>;
+            using Pointer   = const HashNode<TKey, TValue>*;
+            using Reference = const HashNode<TKey, TValue>&;
+
+        public:
+            ConstIterator(Pointer data, const Pointer& head) : m_data(data), m_head(head) {
+            };
+            ~ConstIterator() = default;
+
+            Reference operator * () {
+                while (!(m_data->get_hash_code())) {
+                    m_data++;
+                }
+                return *m_data;
+            }
+
+            Pointer operator -> () {
+                while (!(m_data->get_hash_code())) {
+                    m_data++;
+                }
+                return m_data; 
+            }
+
+            void operator ++ () {
+                while (!(m_data->get_hash_code())) {
+                    m_data++;
+                }
+                do {
+                    m_data++;
+                } while (!(m_data->get_hash_code()) && m_data != m_head);
+            }
+
+            bool operator == (const ConstIterator& it) {
+                if (m_data == it.m_data) {
+                    return true;
+                }
+                while (!(m_data->get_hash_code())) {
+                    m_data++;
+                    if (m_data == it.m_data) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            bool operator != (const ConstIterator& it) {
+                if (m_data == it.m_data) {
+                    return false;
+                }
+                while (!(m_data->get_hash_code())) {
+                    m_data++;
+                    if (m_data == it.m_data) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+        protected:
+            Pointer m_data;
+            Pointer& m_head;
+        };
+
+
+        class ConstReverseIterator {
+        public:
+            using Type = ::ccnt::SparseIterator;
+            using ValueType = const HashNode<TKey, TValue>;
+            using Pointer   = const HashNode<TKey, TValue>*;
+            using Reference = const HashNode<TKey, TValue>&;
+
+        public:
+            ConstReverseIterator(Pointer data, const Pointer& head) : m_data(data), m_head(head) {
+            };
+            ~ConstReverseIterator() = default;
+
+            Reference operator * () {
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                }
+                return *m_data;
+            }
+
+            Pointer operator -> () {
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                }
+                return m_data; 
+            }
+
+            void operator ++ () {
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                }
+                do {
+                    m_data--;
+                } while (!(m_data->get_hash_code()) && m_data != m_head);
+            }
+
+            bool operator == (const ConstReverseIterator& it) {
+                if (m_data == it.m_data) {
+                    return true;
+                }
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                    if (m_data == it.m_data) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            bool operator != (const ConstReverseIterator& it) {
+                if (m_data == it.m_data) {
+                    return false;
+                }
+                while (!(m_data->get_hash_code())) {
+                    m_data--;
+                    if (m_data == it.m_data) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+        private:
+            Pointer m_data;
+            Pointer& m_head;
         };
 
     public:
-        HashMapOpenAddressing() : m_count(0), m_capacity(16) {
+        HashMap() : m_count(0), m_capacity(16) {
             m_data = m_allocator.allocate(m_capacity);
+            m_head = m_data + m_capacity;
             clear_hash_codes();
         }
 
-        ~HashMapOpenAddressing() {
+        ~HashMap() {
             for (std::uint32_t i = 0; i < m_capacity; i++) {
                 std::uint32_t destroyed = 0;
                 if (m_data[i].get_hash_code()) {
@@ -142,54 +379,57 @@ namespace ccnt {
         }
 
         template<typename... TArgs>
-        HashNode<TValue>& emplace(const TKey& key, TArgs&&... args) {
+        HashNode<TKey, TValue>& emplace(const TKey& key, TArgs&&... args) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
 
             while (m_data[hash_index].get_hash_code()) {
                 if (++hash_index == m_capacity) {
-                    grow(m_capacity + (m_capacity * TGrowthFactor));
+                    grow(m_capacity + (m_capacity * 2));
                     return emplace(key, std::forward<TArgs>(args)...);
                 }
             }
 
-            std::construct_at(m_data + hash_index, hash_code, std::forward<TArgs>(args)...);
+            std::construct_at(m_data + hash_index, hash_code, key, std::forward<TArgs>(args)...);
             m_count++;
 
             return m_data[hash_index];
         }
 
-        HashNode<TValue>& insert(const TKey& key, const TValue& value ) {
+        HashNode<TKey, TValue>& insert(const TKey& key, const TValue& value ) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
 
             while (m_data[hash_index].get_hash_code()) {
                 if (++hash_index == m_capacity) {
-                    grow(m_capacity + (m_capacity * TGrowthFactor));
+                    grow(m_capacity + (m_capacity * 2));
                     return insert(key, value);
                 }
             }
 
-            std::construct_at(m_data + hash_index, hash_code, std::move(value));
+            std::construct_at(m_data + hash_index, hash_code, key, std::move(value));
             m_count++;
 
             return m_data[hash_index];
         }
 
-        HashNode<TValue>& operator [] (const TKey& key) {
+        HashNode<TKey, TValue>& operator [] (const TKey& key) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
             
-            while (m_data[hash_index].get_hash_code() != hash_code) {
-
-                hash_index++;
+            do {
                 assert(hash_index != m_capacity);
-            }
+                while (m_data[hash_index].get_hash_code() != hash_code) {
 
-            return m_data[hash_index];
+                    hash_index++;
+                    assert(hash_index != m_capacity);
+                }
+            } while (m_data[hash_index++].get_key() != key);
+
+            return m_data[hash_index - 1];
         }
 
         void remove(const TKey& key) {
@@ -197,31 +437,103 @@ namespace ccnt {
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
 
-            while (m_data[hash_index].get_hash_code() != hash_code) {
-                hash_index++;
+            do {
                 assert(hash_index != m_capacity);
-            }
+                while (m_data[hash_index].get_hash_code() != hash_code) {
 
-            std::destroy_at(m_data + hash_index);
+                    hash_index++;
+                    assert(hash_index != m_capacity);
+                }
+            } while (m_data[hash_index++].get_key() != key);
+
+            std::destroy_at(m_data + hash_index - 1);
+        }
+
+        void clear() {
+            for (std::uint32_t i = 0; i < m_capacity; i++) {
+                std::uint32_t destroyed = 0;
+                if (m_data[i].get_hash_code()) {
+                    std::destroy_at(&m_data[i].get_value());
+                    destroyed++;
+                }
+                if (destroyed == m_count) {
+                    clear_hash_codes();
+                    m_count = 0;
+                    return;
+                }
+            }
         }
 
         Iterator begin() {
-            return Iterator(m_data);
+            auto* data = m_data;
+            while (!data->get_hash_code()) {
+                data++;
+            }
+            return Iterator(data, m_head);
         } 
 
         Iterator end() {
-            return Iterator(m_data + m_capacity);
+            return Iterator(m_data + m_capacity, m_head);
         }
 
-        HashMapOpenAddressing (const HashMapOpenAddressing&) = delete;
-        HashMapOpenAddressing& operator= (const HashMapOpenAddressing&) = default;
+        ConstIterator begin() const {
+            auto* data = m_data;
+            while (!data->get_hash_code()) {
+                data++;
+            }
+            return ConstIterator(data, m_head);
+        } 
+
+        ConstIterator end() const {
+            return ConstIterator(m_data + m_capacity, m_head);
+        }
+
+        ConstIterator cbegin() {
+            auto* data = m_data;
+            while (!data->get_hash_code()) {
+                data++;
+            }
+            return ConstIterator(data, m_head);
+        } 
+
+        ConstIterator cend() {
+            return ConstIterator(m_data + m_capacity, m_head);
+        }
+
+        ReverseIterator rbegin() {
+            auto* data = m_head;
+            while (!data->get_hash_code()) {
+                data--;
+            }
+            return ReverseIterator(data, m_data);
+        } 
+
+        ReverseIterator rend() {
+            return ReverseIterator(m_data, m_data);
+        }
+
+        ConstReverseIterator crbegin() {
+            auto* data = m_head;
+            while (!data->get_hash_code()) {
+                data--;
+            }
+            return ConstReverseIterator(data, m_data);
+        } 
+
+        ConstReverseIterator crend() {
+            return ConstReverseIterator(m_data, m_data);
+        }
+
+        HashMap (const HashMap&) = delete;
+        HashMap& operator= (const HashMap&) = default;
 
     private:
         void grow(std::uint32_t new_capacity) {
             std::uint32_t old_capacity = m_capacity;
             m_capacity = new_capacity;
-            HashNode<TValue>* tmp_data = m_data;
+            HashNode<TKey, TValue>* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);
+            m_head = m_data + m_capacity;
             clear_hash_codes();
 
             for (std::uint32_t i = 0; i < old_capacity; i++) {
@@ -229,7 +541,7 @@ namespace ccnt {
                     std::uint32_t hash_index = THashIndex::hash_index(tmp_data[i].get_hash_code(), m_capacity);
                     while (m_data[hash_index].get_hash_code()) {
                         if (++hash_index == m_capacity) {
-                            grow(m_capacity + (m_capacity * TGrowthFactor));
+                            grow(m_capacity * 2);
                             m_allocator.deallocate(tmp_data, old_capacity);
                             return;
                         }
@@ -249,140 +561,9 @@ namespace ccnt {
 
     private:
         TAllocator m_allocator;
-        HashNode<TValue>* m_data;
+        HashNode<TKey, TValue>* m_data;
+        HashNode<TKey, TValue>* m_head;
         std::uint32_t m_count;
         std::uint32_t m_capacity;
-
-    };
-
-    template<typename TValue, typename TKey, std::uint32_t TSize, typename THashIndex = DivisionHashIndex, typename TAllocator1 = std::allocator<HashNode<TValue>>, typename TAllocator2 = std::allocator<Node<HashNode<TValue>>>>
-    class HashMapSeparateChaining {
-    public:
-        using Value = TValue;
-        using Key   = TKey;
-
-        class Iterator {
-        public:
-            using ValueType = HashNode<TValue>;
-            using Pointer   = HashNode<TValue>*;
-            using Reference = HashNode<TValue>&;
-
-        public:
-            Iterator(DoublyLinkedList<ValueType, TAllocator2>* data, DoublyLinkedList<ValueType, TAllocator2>::Iterator it) : m_data(data), m_it(it) {
-                
-            };
-            ~Iterator() = default;
-
-            Reference operator * () {
-                return *m_it;
-            }
-
-            Pointer operator -> () {
-                return m_it;
-            }
-
-            void operator ++ () {
-                if (m_it == m_data->end()) {
-                    ++m_data;
-                    m_it = typename DoublyLinkedList<ValueType, TAllocator2>::Iterator(m_data->begin());
-                }
-                else {
-                    ++m_it;
-                }
-            }
-
-            bool operator == (const Iterator& it) {
-                while (!m_data->get_length()) {
-                    m_it = typename DoublyLinkedList<ValueType, TAllocator2>::Iterator(m_data->begin());
-                    if (m_it == it.m_it && m_data == it.m_data) {
-                        return true;
-                    }
-                    ++m_data;
-                }
-
-                return ((m_it == it.m_it) && (m_data == it.m_data));
-            }
-
-            bool operator != (const Iterator& it) {
-                while (m_it == m_data->end()) {
-                    if (m_it == it.m_it && m_data == it.m_data) {
-                        return false;
-                    }
-
-                    ++m_data;
-                    m_it = typename DoublyLinkedList<ValueType, TAllocator2>::Iterator(m_data->begin());
-                }
-
-                return ((m_it != it.m_it) || (m_data != it.m_data));
-            }
-
-        private:
-            DoublyLinkedList<ValueType, TAllocator2>* m_data;
-            DoublyLinkedList<ValueType, TAllocator2>::Iterator m_it;
-        };
-
-    public:
-        HashMapSeparateChaining() : m_count(0) {
-        }
-
-        ~HashMapSeparateChaining() = default;
-
-        template<typename... TArgs>
-        HashNode<TValue>& emplace(const TKey& key, TArgs&&... args) {
-            std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
-            std::uint32_t hash_index = THashIndex::hash_index(HashCode<TKey>::hash_code(key), TSize);
-            HashNode<TValue>& node = m_data[hash_index].emplace_at_tail(hash_code, std::forward<TArgs>(args)...);
-            m_count++;
-            return node;
-        }
-
-        HashNode<TValue>& insert(const TKey& key, const TValue& value ) {
-            std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
-            std::uint32_t hash_index = THashIndex::hash_index(HashCode<TKey>::hash_code(key), TSize);
-            HashNode<TValue>& node = m_data[hash_index].emplace_at_tail(hash_code, value);
-            m_count++;
-            return node;
-        }
-
-        HashNode<TValue>& operator [] (const TKey& key) {
-            std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
-            std::uint32_t hash_index = THashIndex::hash_index(HashCode<TKey>::hash_code(key), TSize);
-            for (HashNode<TValue>& node : m_data[hash_index]) {
-                if (node.get_hash_code() == hash_code) {
-                    return node;
-                }
-            }
-            assert(0);
-        }
-
-        void remove(const TKey& key) {
-            std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
-            std::uint32_t hash_index = THashIndex::hash_index(HashCode<TKey>::hash_code(key), TSize);
-            for (Node<HashNode<TValue>>& node : m_data[hash_index]) {
-                if (node.get_hash_code() == hash_code) {
-                    m_data[hash_index].erase(node);
-                } 
-            }
-        }
-
-        inline std::uint32_t get_size() {
-            return TSize;
-        }
-
-        Iterator begin() {
-            return Iterator(m_data, m_data[0].begin());
-        } 
-
-        Iterator end() {
-            return Iterator(m_data + TSize - 1, m_data[TSize - 1].end());
-        }
-
-        HashMapSeparateChaining (const HashMapSeparateChaining&) = delete;
-        HashMapSeparateChaining& operator= (const HashMapSeparateChaining&) = default;
-
-    private:
-        TAllocator1 m_allocator;
-        DoublyLinkedList<HashNode<TValue>, TAllocator2> m_data[TSize];
-        std::uint32_t m_count;
     };
 }

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <assert.h>
+#include "algorithm.h"
 
 namespace ccnt {
     template<typename TValue, typename TAllocator = std::allocator<TValue>>
@@ -10,6 +11,7 @@ namespace ccnt {
     public:
         class Iterator {
         public:
+            using Type = ::ccnt::IndexableIterator;
             using ValueType = TValue;
             using Pointer   = TValue*;
             using Reference = TValue&;
@@ -40,10 +42,80 @@ namespace ccnt {
                 return m_data != it.m_data;
             }
 
-        private:
+        protected:
             Pointer m_data;
         };
 
+        class ReverseIterator : public Iterator {
+        public:
+            using Type = ::ccnt::ReverseIndexableIterator;
+            using ValueType = TValue;
+            using Pointer   = TValue*;
+            using Reference = TValue&;
+
+        public:
+            ReverseIterator(Pointer pointer) : Iterator(pointer) {}
+            ~ReverseIterator() = default;
+
+            void operator ++ () {
+                Iterator::m_data--;
+            }
+        };
+
+        class ConstIterator {
+        public:
+            using Type = ::ccnt::IndexableIterator;
+            using ValueType = const TValue;
+            using Pointer   = const TValue*;
+            using Reference = const TValue&;
+
+        public:
+            ConstIterator(Pointer data) : m_data(data) {
+            };
+
+            ~ConstIterator() = default;
+
+            Reference operator * () const {
+                return *m_data;
+            }
+
+            Pointer operator -> () const {
+                return m_data; 
+            }
+
+            void operator ++ () const {
+                m_data++;
+            }
+
+            bool operator == (const ConstIterator& it) const {
+                return m_data == it.m_data;
+            }
+
+            bool operator != (const ConstIterator& it) const {
+                return m_data != it.m_data;
+            }
+
+        protected:
+            Pointer m_data;
+        };
+
+        class ConstReverseIterator : public ConstIterator {
+        public:
+            using Type = ::ccnt::ReverseIndexableIterator;
+            using ValueType = const TValue;
+            using Pointer   = const TValue*;
+            using Reference = const TValue&;
+
+        public:
+            ConstReverseIterator() : ConstIterator() {}
+            ~ConstReverseIterator() = default;
+
+            void operator ++ () const {
+                ConstIterator::m_data--;
+            }
+        };
+
+    public:
         Vector() : m_count(0), m_capacity(2) {
             m_data = m_allocator.allocate(2);
         }
@@ -212,12 +284,44 @@ namespace ccnt {
             return m_capacity;
         }
 
-        Iterator begin() const {
+        Iterator begin() {
             return Iterator(m_data);
         }
 
-        Iterator end() const {
+        Iterator end() {
             return Iterator(m_data + m_count);
+        }
+
+        ConstIterator begin() const {
+            return ConstIterator(m_data);
+        }
+
+        ConstIterator end() const {
+            return ConstIterator(m_data + m_count);
+        }
+
+        ConstIterator cbegin() const {
+            return ConstIterator(m_data);
+        }
+
+        ConstIterator cend() const {
+            return ConstIterator(m_data);
+        }
+
+        ReverseIterator rbegin() const {
+            return ReverseIterator(m_data + m_count);
+        }
+
+        ReverseIterator rend() const {
+            return ReverseIterator(m_data);
+        }
+
+        ConstReverseIterator crbegin() const {
+            return ConstReverseIterator(m_data + m_count);
+        }
+
+        ConstReverseIterator crend() const {
+            return ConstReverseIterator(m_data);
         }
 
         Vector (const Vector&) = delete;

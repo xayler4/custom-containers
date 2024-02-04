@@ -1,15 +1,21 @@
 #pragma once
 
+#include "algorithm.h"
 #include <cstdint>
 #include <memory>
 #include <assert.h>
 
 namespace ccnt {
     template<typename TValue>
-    struct Node {
+    class Node;
+    template<typename TValue, typename TAllocator = std::allocator<Node<TValue>>>
+    class DoublyLinkedList;
+
+    template<typename TValue>
+    class Node {
     public:
         template<typename... TArgs>
-        Node(std::nullptr_t dummy,  Node<TValue>* previous,  Node<TValue>* next, TArgs&&... args) : value(std::forward<TArgs>(args)...), previous(previous), next(next) {
+        Node(void* owner_list, Node<TValue>* previous,  Node<TValue>* next, TArgs&&... args) : m_owner_list(owner_list), value(std::forward<TArgs>(args)...), previous(previous), next(next) {
             if (this->previous != nullptr) {
                 this->previous->next = this;
             }
@@ -18,7 +24,7 @@ namespace ccnt {
             }
         }
 
-        Node(Node<TValue>* previous,  Node<TValue>* next, const TValue& value) : value(std::move(value)), previous(previous), next(next) {
+        Node(void* owner_list, Node<TValue>* previous,  Node<TValue>* next, const TValue& value) : m_owner_list(owner_list), value(std::move(value)), previous(previous), next(next) {
             if (this->previous != nullptr) {
                 this->previous->next = this;
             }
@@ -36,7 +42,82 @@ namespace ccnt {
             }
         }
 
-        inline operator TValue&() { return value; }
+        void swap(Node& node) {
+            assert(node.m_owner_list == m_owner_list);
+            auto* owner_list = static_cast<DoublyLinkedList<TValue>*>(m_owner_list);
+
+            if (&node == owner_list->get_head()) {
+                owner_list->m_head = this;
+            }
+            else if (this == owner_list->get_head()) {
+                owner_list->m_head = &node;
+            }
+
+            if (&node == owner_list->get_tail()) {
+                owner_list->m_tail = this;
+            }
+            else if (this == owner_list->get_tail()) {
+                owner_list->m_tail = &node;
+            }
+
+            if (&node == next) {
+                if (previous != nullptr) {
+                    previous->next = &node;
+                }
+                node.previous = previous;
+                previous = &node;
+                next = node.next;
+                if (node.next != nullptr) {
+                    node.next->previous = this;
+                }
+                node.next = this;
+                return;
+            }
+            else if (&node == previous) {
+                if (node.previous != nullptr) {
+                    node.previous->next = this;
+                }
+                previous = node.previous;
+                node.previous = this;
+                node.next = next;
+                if (next != nullptr) {
+                    next->previous = &node;
+                }
+                next = &node;
+                return;
+            }
+
+            Node* node_previous = node.previous; 
+            Node* node_next = node.next; 
+
+            if (node_previous != nullptr) {
+                node_previous->next = this;
+            }
+            if (node_next != nullptr) {
+                node_next->previous = this;
+            }
+
+            if (previous != nullptr) {
+                previous->next = &node;
+            }
+            if (next != nullptr) {
+                next->previous = &node;
+            }
+
+            node.previous = previous;
+            node.next = next;
+
+            previous = node_previous;
+            next = node_next;
+        }
+
+        inline operator TValue&() { 
+            return value; 
+        }
+
+        inline operator const TValue&() const { 
+            return value; 
+        }
 
         Node(const Node<TValue>&) = delete;
         Node operator = (const Node<TValue>&) = delete;
@@ -46,14 +127,16 @@ namespace ccnt {
         Node<TValue>* previous;
         Node<TValue>* next;
 
+    private:
+        void* m_owner_list;
     };
 
-
-    template<typename TValue, typename TAllocator = std::allocator<Node<TValue>>>
+    template<typename TValue, typename TAllocator>
     class DoublyLinkedList {
     public:
         class Iterator {
         public:
+            using Type = ListIterator;
             using ValueType = ::ccnt::Node<TValue>;
             using Pointer   = ::ccnt::Node<TValue>*;
             using Reference = ::ccnt::Node<TValue>&;
@@ -84,28 +167,115 @@ namespace ccnt {
                 return m_node != it.m_node;
             }
 
-        private:
+        protected:
+            Pointer m_node;
+        };
+
+        class ReverseIterator {
+        public:
+            using Type = ListIterator;
+            using ValueType = ::ccnt::Node<TValue>;
+            using Pointer   = ::ccnt::Node<TValue>*;
+            using Reference = ::ccnt::Node<TValue>&;
+
+        public:
+            ReverseIterator(Pointer node) : m_node(node) {
+            };
+
+            ~ReverseIterator() = default;
+
+            Reference operator * () {
+                return *m_node;
+            }
+
+            Pointer operator -> () {
+                return m_node; 
+            }
+
+            void operator ++ () {
+                m_node = m_node->previous;
+            }
+
+            bool operator == (const ReverseIterator& it) {
+                return m_node == it.m_node;
+            }
+
+            bool operator != (const ReverseIterator& it) {
+                return m_node != it.m_node;
+            }
+
+        protected:
             Pointer m_node;
         };
 
 
+        class ConstIterator {
+        public:
+            using Type = ListIterator;
+            using ValueType = const ::ccnt::Node<TValue>;
+            using Pointer   = const ::ccnt::Node<TValue>*;
+            using Reference = const ::ccnt::Node<TValue>&;
+
+        public:
+            ConstIterator(Pointer node) : m_node(node) {
+            };
+
+            ~ConstIterator() = default;
+
+            Reference operator * () {
+                return *m_node;
+            }
+
+            Pointer operator -> () {
+                return m_node; 
+            }
+
+            void operator ++ () {
+                m_node = m_node->next;
+            }
+
+            bool operator == (const ConstIterator& it) {
+                return m_node == it.m_node;
+            }
+
+            bool operator != (const ConstIterator& it) {
+                return m_node != it.m_node;
+            }
+
+        protected:
+            Pointer m_node;
+        };
+
+        class ConstReverseIterator : public ConstIterator {
+        public:
+            using Type = ListIterator;
+            using ValueType = const ::ccnt::Node<TValue>;
+            using Pointer   = const ::ccnt::Node<TValue>*;
+            using Reference = const ::ccnt::Node<TValue>&;
+
+        public:
+            ConstReverseIterator(Pointer node) : ConstIterator(node) {
+            };
+
+            ~ConstReverseIterator() = default;
+
+            void operator ++ () {
+                ConstIterator::m_node = ConstIterator::m_node->previous;
+            }
+        };
+
     public:
         DoublyLinkedList() : m_length(0) {
             m_head = m_allocator.allocate(1);
-            m_tail = m_allocator.allocate(1);
-
-            m_inactive_head = m_head;
-            m_inactive_tail = m_tail;
-
-            m_head->next = m_tail;
+            m_tail = m_head;
             m_head->previous = nullptr;
-            m_tail->previous = m_head;
-            m_tail->next = nullptr;
+            m_head->next = nullptr;
         }
 
         ~DoublyLinkedList() {
-            for (Node<TValue>& node : *this){
-                erase(node);
+            for (Node<TValue>* node = m_head; node != nullptr; node = node->next) {
+                std::destroy_at(node);
+                m_allocator.deallocate(node, 1);
             }
         }
 
@@ -115,7 +285,7 @@ namespace ccnt {
                 return emplace_at_tail(std::forward<TArgs>(args)...);
             }
             Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, nullptr, &previous, previous.next, std::forward<TArgs>(args)...);
+			std::construct_at(new_node, this, &previous, previous.next, std::forward<TArgs>(args)...);
             m_length++;
             return *new_node;
         }
@@ -125,7 +295,7 @@ namespace ccnt {
                 return insert_at_tail(value);
             }
             Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, &previous, previous.next, std::move(value));
+			std::construct_at(new_node, this, &previous, previous.next, std::move(value));
             m_length++;
             return *new_node;
         }
@@ -137,7 +307,7 @@ namespace ccnt {
             }
 
             Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, nullptr, next.previous, &next, std::forward<TArgs>(args)...);
+			std::construct_at(new_node, this, next.previous, &next, std::forward<TArgs>(args)...);
             m_length++;
             return *new_node;
         }
@@ -147,66 +317,71 @@ namespace ccnt {
                 return insert_at_head(value);
             }
             Node<TValue>* new_node = m_allocator.allocate(1);
-			std::construct_at(new_node, next.previous, &next, std::move(value));
+			std::construct_at(new_node, this, next.previous, &next, std::move(value));
             m_length++;
             return *new_node;
         }
 
         template<typename... TArgs>
         Node<TValue>& emplace_at_tail(TArgs&&... args) {
-            if (m_tail == m_inactive_tail) {
-                std::construct_at(&m_tail->value, std::forward<TArgs>(args)...);
-                m_inactive_tail = nullptr;
+            if (m_length == 0) {
+                std::construct_at(m_tail, this, nullptr, nullptr, std::forward<TArgs>(args)...);
+                m_length++;
+                return *m_tail;
             }
-            else {
-                Node<TValue>* tail = m_allocator.allocate(1);
-                std::construct_at(tail, nullptr, m_tail, nullptr, std::forward<TArgs>(args)...);
-                m_tail = tail;
-            }
+
+            Node<TValue>* tail = m_allocator.allocate(1);
+            std::construct_at(tail, this, m_tail, nullptr, std::forward<TArgs>(args)...);
+            m_tail = tail;
             m_length++;
+
             return *m_tail;
         }
 
         Node<TValue>& insert_at_tail(const TValue& value) {
-            if (m_tail == m_inactive_tail) {
-                m_tail->value = std::move(value);
-                m_inactive_tail = nullptr;
+            if (m_length == 0) {
+                std::construct_at(m_tail, this, nullptr, nullptr, value);
+                m_length++;
+                return *m_tail;
             }
-            else {
-                Node<TValue>* tail = m_allocator.allocate(1);
-                std::construct_at(tail, m_tail, nullptr, std::move(value));
-                m_tail = tail;
-            }
+
+            Node<TValue>* tail = m_allocator.allocate(1);
+            std::construct_at(tail, this, m_tail, nullptr, std::move(value));
+            m_tail = tail;
             m_length++;
+
             return *m_tail;
         }
 
         template<typename... TArgs>
         Node<TValue>& emplace_at_head(TArgs&&... args) {
-            if (m_head == m_inactive_head) {
-                std::construct_at(&m_head->value, std::forward<TArgs>(args)...);
-                m_inactive_head = nullptr;
+            if (m_length == 0) {
+                std::construct_at(m_head, this, nullptr, nullptr, std::forward<TArgs>(args)...);
+                m_length++;
+                return *m_head;
             }
-            else {
-                Node<TValue>* head = m_allocator.allocate(1);
-			    std::construct_at(head, nullptr, m_head, std::forward<TArgs>(args)...);
-                m_head = head;
-            }
+
+            Node<TValue>* head = m_allocator.allocate(1);
+            std::construct_at(head, this, nullptr, m_head, std::forward<TArgs>(args)...);
+            m_head = head;
             m_length++;
+
             return *m_head;
         }
 
         Node<TValue>& insert_at_head(const TValue& value) {
-            if (m_head == m_inactive_head) {
-                m_head->value = std::move(value);
-                m_inactive_head = nullptr;
+            if (m_length == 0) {
+                std::construct_at(m_head, this, nullptr, nullptr, value);
+                m_length++;
+                return *m_head;
             }
-            else {
-                Node<TValue>* head = m_allocator.allocate(1);
-			    std::construct_at(head, nullptr, m_head, std::move(value));
-                m_head = head;
-            }
+
+            Node<TValue>* head = m_allocator.allocate(1);
+            std::construct_at(head, this, nullptr, m_head, value);
+            m_head = head;
+
             m_length++;
+
             return *m_head;
         }
 
@@ -227,66 +402,45 @@ namespace ccnt {
 
         Node<TValue>* pop_tail() {
             assert(m_length);
-            if (m_tail->previous == m_head) {
-                if (m_tail != m_inactive_tail) {
-                    std::destroy_at(&m_tail->value);
-                    m_inactive_tail = m_tail;
-                    m_length--;
-                    return nullptr;
-                }
-                else {
-                    return pop_head();
-                }
-            }
-            Node<TValue>* new_tail = m_tail->previous;
-            if (m_tail != m_inactive_tail) {
+            if (m_length == 1) {
                 std::destroy_at(m_tail);
+                m_length = 0;
+                return m_tail;
             }
+
+            Node<TValue>* new_tail = m_tail->previous;
+            std::destroy_at(m_tail);
 			m_allocator.deallocate(m_tail, 1);
 
             m_tail = new_tail;
+            if (m_length == 2) {
+                m_head = m_tail;
+            }
             m_length--;
+
             return m_tail;
         }
 
         Node<TValue>* pop_head() {
             assert(m_length);
-            if (m_head->next == m_tail) {
-                if (m_head != m_inactive_head) {
-                    std::destroy_at(&m_head->value);
-                    m_inactive_head = m_head;
-                    m_length--;
-                    return nullptr;
-                }
-                else {
-                    return pop_tail();
-                }
-            }
-            Node<TValue>* new_head = m_head->next;
-            if (m_head != m_inactive_head) {
+
+            if (m_length == 1) {
                 std::destroy_at(m_head);
+                m_length = 0;
+                return m_head;
             }
+
+            Node<TValue>* new_head = m_head->next;
+            std::destroy_at(m_head);
 			m_allocator.deallocate(m_head, 1);
 
             m_head = new_head;
+            if (m_length == 2) {
+                m_tail = m_head;
+            }
             m_length--;
+
             return m_head;
-        }
-
-        Iterator begin() {
-            Node<TValue>* node = m_head;
-            if (m_head == m_inactive_head) {
-                node = node->next;
-            }
-            return Iterator(node);
-        }
-
-        Iterator end() {
-            Node<TValue>* node = nullptr;
-            if (m_tail == m_inactive_tail) {
-                node = m_tail;
-            }
-            return Iterator(node);
         }
 
         inline const Node<TValue>* get_head() const { 
@@ -299,15 +453,47 @@ namespace ccnt {
             return m_length;
         }
 
+        Iterator begin() {
+            return Iterator(m_head);
+        }
+
+        Iterator end() {
+            return Iterator(nullptr);
+        }
+
+        ConstIterator begin() const {
+            return ConstIterator(m_head);
+        }
+
+        ConstIterator end() const {
+            return ConstIterator(nullptr);
+        }
+
+        ReverseIterator rbegin() {
+            return ReverseIterator(m_tail);
+        }
+
+        ReverseIterator rend() {
+            return ReverseIterator(nullptr);
+        }
+
+        ConstReverseIterator crbegin() {
+            return ConstReverseIterator(m_tail);
+        }
+
+        ConstReverseIterator crend() const {
+            return ConstReverseIterator(nullptr);
+        }
+
         DoublyLinkedList(const DoublyLinkedList<TValue, TAllocator>&) = delete;
         DoublyLinkedList& operator= (const DoublyLinkedList<TValue, TAllocator>&) = default;
 
     private:
         Node<TValue>* m_head;
         Node<TValue>* m_tail;
-        Node<TValue>* m_inactive_head;
-        Node<TValue>* m_inactive_tail;
         std::uint32_t m_length;
         TAllocator m_allocator;
+    
+        friend class Node<TValue>;
     };
 }
