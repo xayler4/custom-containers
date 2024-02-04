@@ -96,7 +96,7 @@ namespace ccnt {
             }
 
         protected:
-            Pointer m_data;
+            TValue* m_data;
         };
 
         class ConstReverseIterator : public ConstIterator {
@@ -110,7 +110,7 @@ namespace ccnt {
             ConstReverseIterator() : ConstIterator() {}
             ~ConstReverseIterator() = default;
 
-            void operator ++ () const {
+            void operator ++ () {
                 ConstIterator::m_data--;
             }
         };

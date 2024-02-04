@@ -96,7 +96,7 @@ namespace ccnt  {
             }
 
         private:
-            Pointer m_data;
+            TValue* m_data;
         };
 
         class ConstReverseIterator : public ConstIterator {

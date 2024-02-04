@@ -286,7 +286,7 @@ namespace ccnt {
             }
 
         protected:
-            Pointer m_data;
+            HashNode<TKey, TValue>* m_data;
             Pointer& m_head;
         };
 
@@ -353,7 +353,7 @@ namespace ccnt {
             }
 
         private:
-            Pointer m_data;
+            HashNode<TKey, TValue>* m_data;
             Pointer& m_head;
         };
 
