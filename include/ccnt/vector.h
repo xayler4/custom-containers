@@ -262,6 +262,19 @@ namespace ccnt {
             m_count = 0;
         }
 
+        inline Vector& operator = (Vector&& vector) {
+            m_data = vector.m_data;
+            m_count = vector.m_count;
+            m_capacity = vector.m_capacity;
+            m_allocator = vector.m_allocator;
+
+            vector.m_data = nullptr;
+            vector.m_count = 0;
+            vector.m_capacity = 0;
+
+            return *this;
+        }
+
         inline TValue& operator[] (std::uint32_t index) {
             assert(index >= 0 && index < m_count);
             return m_data[index];   
