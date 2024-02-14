@@ -370,6 +370,9 @@ namespace ccnt {
             return ConstReverseIterator(this, 0);
         }
 
+        DynamicBitmask(const DynamicBitmask&) = delete;
+        DynamicBitmask& operator = (const DynamicBitmask&) = delete;
+
     private:
         void grow() {
             Bitmask<TBitsGrowth>* tmp_bitmask = m_bitmasks;
