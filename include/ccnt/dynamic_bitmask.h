@@ -203,6 +203,8 @@ namespace ccnt {
         }
 
         void pop_bit() {
+            assert(m_count != 0);
+
             std::uint32_t index = m_count/TBitsGrowth;
             std::uint32_t relative_bit = m_count - index * TBitsGrowth;
 
@@ -210,7 +212,26 @@ namespace ccnt {
             m_count--;
         }
 
+        void set_bit(std::uint32_t nbit) {
+            assert(nbit < m_count);
+
+            std::uint32_t index = m_count/TBitsGrowth;
+            std::uint32_t relative_bit = m_count - index * TBitsGrowth;
+            
+            m_bitmasks[index].set_bit(relative_bit);
+        }
+
+        void unset_bit(std::uint32_t nbit) {
+            assert(nbit < m_count);
+
+            std::uint32_t index = m_count/TBitsGrowth;
+            std::uint32_t relative_bit = m_count - index * TBitsGrowth;
+            
+            m_bitmasks[index].unset_bit(relative_bit);
+        }
+
         void resize(std::uint32_t count) {
+            assert(count > m_count);
             m_count = count;
             std::uint32_t index = m_count/TBitsGrowth;
 
@@ -268,8 +289,9 @@ namespace ccnt {
             return m_bitmasks[index][relative_bit];
         }
 
-        inline DynamicBitmask<TBitsGrowth> operator & (const DynamicBitmask<TBitsGrowth>& bitmask) {
+        inline DynamicBitmask<TBitsGrowth> operator & (const DynamicBitmask<TBitsGrowth>& bitmask) const {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
+            assert(min_count != 0);
             std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
 
             DynamicBitmask out_bitmask(nbitmasks);
@@ -284,6 +306,7 @@ namespace ccnt {
 
         inline DynamicBitmask<TBitsGrowth>& operator &= (const DynamicBitmask<TBitsGrowth>& bitmask) {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
+            assert(min_count != 0);
             std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
@@ -293,8 +316,9 @@ namespace ccnt {
             return *this;
         }
 
-        inline DynamicBitmask<TBitsGrowth> operator | (const DynamicBitmask<TBitsGrowth>& bitmask) {
+        inline DynamicBitmask<TBitsGrowth> operator | (const DynamicBitmask<TBitsGrowth>& bitmask) const {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
+            assert(min_count != 0);
             std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
 
             DynamicBitmask out_bitmask(nbitmasks);
@@ -309,6 +333,7 @@ namespace ccnt {
 
         inline DynamicBitmask<TBitsGrowth>& operator |= (const DynamicBitmask<TBitsGrowth>& bitmask) {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
+            assert(min_count != 0);
             std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
@@ -316,6 +341,34 @@ namespace ccnt {
             }
 
             return *this;
+        }
+
+        inline bool operator == (const DynamicBitmask<TBitsGrowth>& bitmask) const {
+            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
+            assert(min_count != 0);
+            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                if (m_bitmasks[i] != bitmask.m_bitmasks[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        inline bool operator != (const DynamicBitmask<TBitsGrowth>& bitmask) const {
+            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
+            assert(min_count != 0);
+            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                if (m_bitmasks[i] == bitmask[i]) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         inline Bitmask<TBitsGrowth>* const get_bitmasks() const {
