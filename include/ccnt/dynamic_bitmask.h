@@ -171,8 +171,8 @@ namespace ccnt {
         }
 
         DynamicBitmask(std::uint32_t nbits_capacity) : m_count(0){
-            std::uint32_t capacity = nbits_capacity/TBitsGrowth;
-            assert(capacity != 0);
+            std::uint32_t capacity = nbits_capacity/TBitsGrowth + 1;
+
             static_assert(TBitsGrowth == sizeof(std::uint8_t) * 8 ||
                           TBitsGrowth == sizeof(std::uint16_t) * 8 ||
                           TBitsGrowth == sizeof(std::uint32_t) * 8 ||
