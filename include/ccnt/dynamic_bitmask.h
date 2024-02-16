@@ -15,6 +15,12 @@ namespace ccnt {
             return ceil(size);
         } 
 
+        using uint_t = std::conditional_t<(TBitsGrowth <= 8), std::uint8_t,
+                std::conditional_t<(TBitsGrowth <= 16), std::uint16_t,
+                std::conditional_t<(TBitsGrowth <= 32), std::uint32_t,
+                std::conditional_t<(TBitsGrowth <= 64), std::uint64_t,
+                std::array<uint64_t, size()>>>>>;
+
     public:
         class Iterator {
         public:
@@ -164,7 +170,8 @@ namespace ccnt {
             m_bitmasks = m_allocator.allocate(1);
         }
 
-        DynamicBitmask(std::uint32_t capacity) : m_count(0), m_capacity(capacity) {
+        DynamicBitmask(std::uint32_t nbits_capacity) : m_count(0){
+            std::uint32_t capacity = nbits_capacity/TBitsGrowth;
             assert(capacity != 0);
             static_assert(TBitsGrowth == sizeof(std::uint8_t) * 8 ||
                           TBitsGrowth == sizeof(std::uint16_t) * 8 ||
@@ -232,12 +239,19 @@ namespace ccnt {
 
         void resize(std::uint32_t count) {
             assert(count > m_count);
-            m_count = count;
-            std::uint32_t index = m_count/TBitsGrowth;
-
+            std::uint32_t index = count/TBitsGrowth;
             if (m_capacity <= index) {
-                reserve(m_count);
+                reserve(count);
             } 
+
+            std::uint32_t old_index = m_count/TBitsGrowth;
+            if (m_bitmasks[old_index] != 0) {
+                for (std::uint32_t i = (old_index + 1) * TBitsGrowth - m_count; i < TBitsGrowth; i++) {
+                    m_bitmasks[old_index].unset_bit(i);
+                }
+            }
+
+            m_count = count;
         }
 
         void reserve(std::uint32_t nbits) {
@@ -291,10 +305,9 @@ namespace ccnt {
 
         inline DynamicBitmask<TBitsGrowth> operator & (const DynamicBitmask<TBitsGrowth>& bitmask) const {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            assert(min_count != 0);
-            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
 
-            DynamicBitmask out_bitmask(nbitmasks);
+            DynamicBitmask out_bitmask(min_count);
             out_bitmask.resize(min_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
@@ -304,10 +317,23 @@ namespace ccnt {
             return out_bitmask;
         }
 
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline DynamicBitmask<TBitsGrowth> operator & (const TBitmask& bitmask) const {
+            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+
+            DynamicBitmask out_bitmask(m_count);
+            out_bitmask.resize(m_count);
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                out_bitmask.m_bitmasks[i] &= bitmask.get_data();
+            }
+
+            return out_bitmask;
+        }
+
         inline DynamicBitmask<TBitsGrowth>& operator &= (const DynamicBitmask<TBitsGrowth>& bitmask) {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            assert(min_count != 0);
-            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 m_bitmasks[i] &= bitmask.m_bitmasks[i];
@@ -316,12 +342,22 @@ namespace ccnt {
             return *this;
         }
 
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline DynamicBitmask<TBitsGrowth>& operator &= (const TBitmask& bitmask) {
+            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                m_bitmasks[i] &= bitmask.get_data();
+            }
+
+            return *this;
+        }
+
         inline DynamicBitmask<TBitsGrowth> operator | (const DynamicBitmask<TBitsGrowth>& bitmask) const {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            assert(min_count != 0);
-            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
 
-            DynamicBitmask out_bitmask(nbitmasks);
+            DynamicBitmask out_bitmask(min_count);
             out_bitmask.resize(min_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
@@ -331,10 +367,23 @@ namespace ccnt {
             return out_bitmask;
         }
 
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline DynamicBitmask<TBitsGrowth> operator | (const TBitmask& bitmask) const {
+            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+
+            DynamicBitmask out_bitmask(m_count);
+            out_bitmask.resize(m_count);
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                out_bitmask.m_bitmasks[i] |= bitmask.get_data();
+            }
+
+            return out_bitmask;
+        }
+
         inline DynamicBitmask<TBitsGrowth>& operator |= (const DynamicBitmask<TBitsGrowth>& bitmask) {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            assert(min_count != 0);
-            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 m_bitmasks[i] |= bitmask[i];
@@ -343,10 +392,21 @@ namespace ccnt {
             return *this;
         }
 
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline DynamicBitmask<TBitsGrowth>& operator |= (const TBitmask& bitmask) {
+            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                m_bitmasks[i] |= bitmask;
+            }
+
+            return *this;
+        }
+
+
         inline bool operator == (const DynamicBitmask<TBitsGrowth>& bitmask) const {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            assert(min_count != 0);
-            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 if (m_bitmasks[i] != bitmask.m_bitmasks[i]) {
@@ -357,10 +417,42 @@ namespace ccnt {
             return true;
         }
 
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline bool operator == (const TBitmask& bitmask) const {
+            if (m_count == 0) {
+                return false;
+            }
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                if (m_bitmasks[i] != bitmask.get_data()) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        inline bool operator == (const uint_t& bitmask) const {
+            if (m_count == 0) {
+                return false;
+            }
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                if (m_bitmasks[i] != bitmask) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         inline bool operator != (const DynamicBitmask<TBitsGrowth>& bitmask) const {
             std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            assert(min_count != 0);
-            std::uint32_t nbitmasks = min_count/TBitsGrowth + 1;
+            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 if (m_bitmasks[i] == bitmask[i]) {
@@ -371,7 +463,40 @@ namespace ccnt {
             return true;
         }
 
-        inline Bitmask<TBitsGrowth>* const get_bitmasks() const {
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline bool operator != (const TBitmask& bitmask) const {
+            if (m_count == 0) {
+                return false;
+            }
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                if (m_bitmasks[i] == bitmask.get_data()) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        inline bool operator != (const uint_t& bitmask) const {
+            if (m_count == 0) {
+                return false;
+            }
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                if (m_bitmasks[i] == bitmask) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        inline Bitmask<TBitsGrowth>* const get_data() const {
             return m_bitmasks;
         }
 

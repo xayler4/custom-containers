@@ -301,7 +301,7 @@ namespace ccnt {
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator == (const uint_t& bitmask) {
+        inline bool operator == (const uint_t& bitmask) const {
             for (std::uint32_t i = 0; i < size(); i++) {
                 if (m_bitmask[i] != bitmask[i]) {
                     return false;
@@ -345,12 +345,12 @@ namespace ccnt {
             *this |= bitmask.m_bitmask;
         }
         
-        template<typename TBitmask>
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline bool operator == (const TBitmask& bitmask) const {
             return *this == bitmask.m_bitmask;
         }
-
-        template<typename TBitmask>
+        
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline bool operator != (const TBitmask& bitmask) const {
             return *this != bitmask.m_bitmask;
         }
@@ -442,6 +442,10 @@ namespace ccnt {
             m_bitmask[index] &= ~(1ULL << ((TBits - 1) - nbit - (index * 64)));
         }
 
+        inline const uint_t& get_data() const {
+            return m_bitmask;
+        } 
+
         Iterator begin() {
             return Iterator(this, 0);
         }
@@ -484,5 +488,8 @@ namespace ccnt {
 
     private:
         uint_t m_bitmask;
+
+        template<std::uint32_t TBits1>
+        friend class Bitmask;
     };
 }
