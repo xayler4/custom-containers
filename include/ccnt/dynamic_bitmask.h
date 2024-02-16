@@ -325,7 +325,7 @@ namespace ccnt {
             out_bitmask.resize(m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] &= bitmask.get_data();
+                out_bitmask.m_bitmasks[i] &= bitmask;
             }
 
             return out_bitmask;
@@ -347,7 +347,7 @@ namespace ccnt {
             std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                m_bitmasks[i] &= bitmask.get_data();
+                m_bitmasks[i] &= bitmask;
             }
 
             return *this;
@@ -375,7 +375,7 @@ namespace ccnt {
             out_bitmask.resize(m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] |= bitmask.get_data();
+                out_bitmask.m_bitmasks[i] |= bitmask;
             }
 
             return out_bitmask;
@@ -426,7 +426,7 @@ namespace ccnt {
             std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                if (m_bitmasks[i] != bitmask.get_data()) {
+                if (m_bitmasks[i] != bitmask) {
                     return false;
                 }
             }
@@ -472,7 +472,7 @@ namespace ccnt {
             std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                if (m_bitmasks[i] == bitmask.get_data()) {
+                if (m_bitmasks[i] == bitmask) {
                     return false;
                 }
             }
