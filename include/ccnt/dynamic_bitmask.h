@@ -299,7 +299,7 @@ namespace ccnt {
         }
 
         inline DynamicBitmask<TBitsGrowth> operator & (const DynamicBitmask<TBitsGrowth>& bitmask) const {
-            assert(bitmask.m_count <= m_count)
+            assert(bitmask.m_count <= m_count);
             assert(bitmask.m_count != 0);
 
             std::uint32_t nbitmasks = bitmask.m_count/TBitsGrowth + 1;
