@@ -325,7 +325,7 @@ namespace ccnt {
             return false;
         }
 
-        template<typename TBitmask, typename std::enable_if<std::is_same<typename TBitmask::uint_t, uint_t>::value, std::nullptr_t>::type = nullptr>
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline Bitmask<TBits> operator & (const TBitmask& bitmask) const {
             return Bitmask<TBits>(*this & bitmask.m_bitmask);
         }

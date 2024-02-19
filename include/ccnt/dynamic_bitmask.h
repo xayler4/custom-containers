@@ -168,11 +168,10 @@ namespace ccnt {
                         );
 
             m_bitmasks = m_allocator.allocate(1);
+            std::construct_at(m_bitmasks);
         }
 
-        DynamicBitmask(std::uint32_t nbits_capacity) : m_count(0){
-            std::uint32_t capacity = nbits_capacity/TBitsGrowth + 1;
-
+        DynamicBitmask(std::uint32_t nbits_capacity) : m_count(0), m_capacity(nbits_capacity/TBitsGrowth + 1){
             static_assert(TBitsGrowth == sizeof(std::uint8_t) * 8 ||
                           TBitsGrowth == sizeof(std::uint16_t) * 8 ||
                           TBitsGrowth == sizeof(std::uint32_t) * 8 ||
@@ -181,6 +180,9 @@ namespace ccnt {
                         );
 
             m_bitmasks = m_allocator.allocate(m_capacity);
+            for (std::uint32_t i = 0; i < m_capacity; i++) {
+                std::construct_at(m_bitmasks + i);
+            }
         }
 
         DynamicBitmask(DynamicBitmask<TBitsGrowth>&& bitmask) : m_bitmasks(bitmask.m_bitmasks), m_count(bitmask.m_count), m_capacity(bitmask.m_capacity), m_allocator(bitmask.m_allocator) {
@@ -222,8 +224,8 @@ namespace ccnt {
         void set_bit(std::uint32_t nbit) {
             assert(nbit < m_count);
 
-            std::uint32_t index = m_count/TBitsGrowth;
-            std::uint32_t relative_bit = m_count - index * TBitsGrowth;
+            std::uint32_t index = nbit/TBitsGrowth;
+            std::uint32_t relative_bit = nbit - index * TBitsGrowth;
             
             m_bitmasks[index].set_bit(relative_bit);
         }
@@ -231,8 +233,8 @@ namespace ccnt {
         void unset_bit(std::uint32_t nbit) {
             assert(nbit < m_count);
 
-            std::uint32_t index = m_count/TBitsGrowth;
-            std::uint32_t relative_bit = m_count - index * TBitsGrowth;
+            std::uint32_t index = nbit/TBitsGrowth;
+            std::uint32_t relative_bit = nbit - index * TBitsGrowth;
             
             m_bitmasks[index].unset_bit(relative_bit);
         }
@@ -243,13 +245,6 @@ namespace ccnt {
             if (m_capacity <= index) {
                 reserve(count);
             } 
-
-            std::uint32_t old_index = m_count/TBitsGrowth;
-            if (m_bitmasks[old_index] != 0) {
-                for (std::uint32_t i = (old_index + 1) * TBitsGrowth - m_count; i < TBitsGrowth; i++) {
-                    m_bitmasks[old_index].unset_bit(i);
-                }
-            }
 
             m_count = count;
         }
@@ -304,11 +299,13 @@ namespace ccnt {
         }
 
         inline DynamicBitmask<TBitsGrowth> operator & (const DynamicBitmask<TBitsGrowth>& bitmask) const {
-            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+            assert(bitmask.m_count <= m_count)
+            assert(bitmask.m_count != 0);
 
-            DynamicBitmask out_bitmask(min_count);
-            out_bitmask.resize(min_count);
+            std::uint32_t nbitmasks = bitmask.m_count/TBitsGrowth + 1;
+
+            DynamicBitmask out_bitmask(bitmask.m_count);
+            out_bitmask.resize(bitmask.m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 out_bitmask.m_bitmasks[i] &= bitmask.m_bitmasks[i];
@@ -319,7 +316,9 @@ namespace ccnt {
 
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline DynamicBitmask<TBitsGrowth> operator & (const TBitmask& bitmask) const {
-            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+            assert(m_count != 0);
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             DynamicBitmask out_bitmask(m_count);
             out_bitmask.resize(m_count);
@@ -332,8 +331,10 @@ namespace ccnt {
         }
 
         inline DynamicBitmask<TBitsGrowth>& operator &= (const DynamicBitmask<TBitsGrowth>& bitmask) {
-            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
+            assert(bitmask.m_count <= m_count);
+            assert(bitmask.m_count != 0);
+
+            std::uint32_t nbitmasks = bitmask.m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 m_bitmasks[i] &= bitmask.m_bitmasks[i];
@@ -344,7 +345,9 @@ namespace ccnt {
 
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline DynamicBitmask<TBitsGrowth>& operator &= (const TBitmask& bitmask) {
-            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+            assert(m_count != 0);
+            
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 m_bitmasks[i] &= bitmask;
@@ -354,14 +357,16 @@ namespace ccnt {
         }
 
         inline DynamicBitmask<TBitsGrowth> operator | (const DynamicBitmask<TBitsGrowth>& bitmask) const {
-            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
+            assert(bitmask.m_count <= m_count);
+            assert(bitmask.m_count != 0);
 
-            DynamicBitmask out_bitmask(min_count);
-            out_bitmask.resize(min_count);
+            std::uint32_t nbitmasks = bitmask.m_count/TBitsGrowth + 1;
+
+            DynamicBitmask out_bitmask(bitmask.m_count);
+            out_bitmask.resize(bitmask.m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask[i] |= bitmask[i];
+                out_bitmask.m_bitmasks[i] |= bitmask.m_bitmasks[i];
             }
 
             return out_bitmask;
@@ -369,7 +374,9 @@ namespace ccnt {
 
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline DynamicBitmask<TBitsGrowth> operator | (const TBitmask& bitmask) const {
-            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+            assert(m_count != 0);
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             DynamicBitmask out_bitmask(m_count);
             out_bitmask.resize(m_count);
@@ -382,11 +389,13 @@ namespace ccnt {
         }
 
         inline DynamicBitmask<TBitsGrowth>& operator |= (const DynamicBitmask<TBitsGrowth>& bitmask) {
-            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
+            assert(bitmask.m_count <= m_count);
+            assert(bitmask.m_count != 0);
+
+            std::uint32_t nbitmasks = bitmask.m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                m_bitmasks[i] |= bitmask[i];
+                m_bitmasks[i] |= bitmask.m_bitmasks[i];
             }
 
             return *this;
@@ -394,10 +403,12 @@ namespace ccnt {
 
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline DynamicBitmask<TBitsGrowth>& operator |= (const TBitmask& bitmask) {
-            std::uint32_t nbitmasks = (m_count == 0) ? 0 : m_count/TBitsGrowth + 1;
+            assert(m_count != 0);
+            
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                m_bitmasks[i] |= bitmask;
+                m_bitmasks[i] &= bitmask;
             }
 
             return *this;
@@ -405,8 +416,11 @@ namespace ccnt {
 
 
         inline bool operator == (const DynamicBitmask<TBitsGrowth>& bitmask) const {
-            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
+            if (bitmask.m_count != m_count || m_count == 0) {
+                return false;
+            }
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 if (m_bitmasks[i] != bitmask.m_bitmasks[i]) {
@@ -451,11 +465,14 @@ namespace ccnt {
         }
 
         inline bool operator != (const DynamicBitmask<TBitsGrowth>& bitmask) const {
-            std::uint32_t min_count = (m_count < bitmask.m_count) ? m_count : bitmask.m_count;
-            std::uint32_t nbitmasks = (min_count == 0) ? 0 : min_count/TBitsGrowth + 1;
+            if (bitmask.m_count != m_count || m_count == 0) {
+                return true;
+            }
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                if (m_bitmasks[i] == bitmask[i]) {
+                if (m_bitmasks[i] == bitmask.m_bitmasks[i]) {
                     return false;
                 }
             }
@@ -466,7 +483,7 @@ namespace ccnt {
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline bool operator != (const TBitmask& bitmask) const {
             if (m_count == 0) {
-                return false;
+                return true;
             }
 
             std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
@@ -482,7 +499,7 @@ namespace ccnt {
 
         inline bool operator != (const uint_t& bitmask) const {
             if (m_count == 0) {
-                return false;
+                return true;
             }
 
             std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
