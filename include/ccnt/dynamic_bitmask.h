@@ -240,11 +240,28 @@ namespace ccnt {
         }
 
         void resize(std::uint32_t count) {
-            assert(count > m_count);
-            std::uint32_t index = count/TBitsGrowth;
-            if (m_capacity <= index) {
-                reserve(count);
+            if (count == 0) {
+                return clear();
+            }
+            if (count < m_count) {
+                std::uint32_t old_index = m_count/TBitsGrowth;
+                std::uint32_t index = count/TBitsGrowth;
+                std::uint32_t relative_bit = count - (index) * TBitsGrowth;
+                
+                for (std::uint32_t i = index + 1; i < old_index; i++) {
+                    std::construct_at(m_bitmasks + i);
+                }
+
+                for (; relative_bit < TBitsGrowth; relative_bit++) {
+                    m_bitmasks[index].unset_bit(relative_bit);
+                }
             } 
+            else {
+                std::uint32_t index = count/TBitsGrowth;
+                if (m_capacity <= index) {
+                    reserve(count);
+                } 
+            }
 
             m_count = count;
         }
@@ -266,6 +283,10 @@ namespace ccnt {
         }
 
         void clear() {
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                std::construct_at(m_bitmasks + i);
+            }
             m_count = 0;
         }
 
@@ -511,6 +532,17 @@ namespace ccnt {
             }
 
             return true;
+        }
+
+        inline std::uint32_t pop_count() const {
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            std::uint32_t count = 0;
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                count += m_bitmasks[i].pop_count();
+            }
+
+            return count;
         }
 
         inline Bitmask<TBitsGrowth>* const get_data() const {

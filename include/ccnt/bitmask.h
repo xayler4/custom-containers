@@ -6,6 +6,7 @@
 #include <memory>
 #include <array>
 #include <assert.h>
+#include <bit>
 #include "algorithm.h"
 
 namespace ccnt {
@@ -440,6 +441,21 @@ namespace ccnt {
             assert(nbit < TBits);
             std::uint32_t index = nbit/64;
             m_bitmask[index] &= ~(1ULL << ((TBits - 1) - nbit - (index * 64)));
+        }
+
+        template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline std::uint32_t pop_count() const {
+            return std::popcount(m_bitmask);
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr> 
+        inline std::uint32_t pop_count() const {
+            std::uint32_t count = 0;
+            for (std::uint32_t i = 0; i < size(); i++) {
+                count += std::popcount(m_bitmask[i]);
+            }
+
+            return count;
         }
 
         inline const uint_t& get_data() const {
