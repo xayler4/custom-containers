@@ -171,7 +171,7 @@ namespace ccnt {
             std::construct_at(m_bitmasks);
         }
 
-        DynamicBitmask(std::uint32_t nbits_capacity) : m_count(0), m_capacity(nbits_capacity/TBitsGrowth + 1){
+        explicit DynamicBitmask(std::uint32_t nbits_capacity) : m_count(0), m_capacity(nbits_capacity/TBitsGrowth + 1){
             static_assert(TBitsGrowth == sizeof(std::uint8_t) * 8 ||
                           TBitsGrowth == sizeof(std::uint16_t) * 8 ||
                           TBitsGrowth == sizeof(std::uint32_t) * 8 ||
@@ -290,6 +290,14 @@ namespace ccnt {
             m_count = 0;
         }
 
+        inline Bitmask<TBitsGrowth>::Proxy operator[] (std::uint32_t nbit) {
+            assert(nbit < m_count);
+            std::uint32_t index = nbit/TBitsGrowth;
+            std::uint32_t relative_bit = nbit - index * TBitsGrowth;
+
+            return m_bitmasks[index][relative_bit];
+        }
+
         inline DynamicBitmask<TBitsGrowth>& operator = (DynamicBitmask<TBitsGrowth>&& bitmask) {
             m_bitmasks = bitmask.m_bitmasks;
             m_count = bitmask.m_count;
@@ -303,12 +311,28 @@ namespace ccnt {
             return *this;
         }
 
-        inline Bitmask<TBitsGrowth>::Proxy operator[] (std::uint32_t nbit) {
-            assert(nbit < m_count);
-            std::uint32_t index = nbit/TBitsGrowth;
-            std::uint32_t relative_bit = nbit - index * TBitsGrowth;
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
 
-            return m_bitmasks[index][relative_bit];
+        inline DynamicBitmask<TBitsGrowth>& operator = (const TBitmask& bitmask) {
+            assert(m_count != 0);
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                m_bitmasks[i] = bitmask;
+            }
+
+            return *this;
+        }
+
+        inline DynamicBitmask<TBitsGrowth>& operator = (const uint_t& bitmask) {
+            assert(m_count != 0);
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                m_bitmasks[i] = bitmask;
+            }
+
+            return *this;
         }
 
         inline bool operator[] (std::uint32_t nbit) const {
