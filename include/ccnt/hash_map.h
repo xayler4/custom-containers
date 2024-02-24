@@ -364,6 +364,13 @@ namespace ccnt {
             clear_hash_codes();
         }
 
+        HashMap(HashMap&& hash_map) : m_data(hash_map.m_data), m_head(hash_map.m_head), m_count(hash_map.m_count), m_allocator(hash_map.m_allocator){
+            hash_map.m_data = nullptr;
+            hash_map.m_head = nullptr;
+            hash_map.m_count = 0;
+            hash_map.m_capacity = 0;
+        }
+
         ~HashMap() {
             for (std::uint32_t i = 0; i < m_capacity; i++) {
                 std::uint32_t destroyed = 0;
@@ -413,6 +420,18 @@ namespace ccnt {
             m_count++;
 
             return m_data[hash_index];
+        }
+
+        inline HashMap& operator = (HashMap&& hash_map) {
+            hash_map.m_data = hash_map.m_data;
+            hash_map.m_head = hash_map.m_head;
+            hash_map.m_count = hash_map.m_count;
+            hash_map.m_capacity = hash_map.m_capacity;
+
+            hash_map.m_data = nullptr;
+            hash_map.m_head = nullptr;
+            hash_map.m_count = 0;
+            hash_map.m_capacity = 0;
         }
 
         HashNode<TKey, TValue>& operator [] (const TKey& key) {
@@ -560,10 +579,10 @@ namespace ccnt {
         }
 
     private:
-        TAllocator m_allocator;
         HashNode<TKey, TValue>* m_data;
         HashNode<TKey, TValue>* m_head;
         std::uint32_t m_count;
         std::uint32_t m_capacity;
+        TAllocator m_allocator;
     };
 }
