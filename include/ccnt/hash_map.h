@@ -451,6 +451,23 @@ namespace ccnt {
             return m_data[hash_index - 1];
         }
 
+        const HashNode<TKey, TValue>& operator [] (const TKey& key) const {
+            std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
+            assert(hash_code != 0);
+            std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
+            
+            do {
+                assert(hash_index != m_capacity);
+                while (m_data[hash_index].get_hash_code() != hash_code) {
+
+                    hash_index++;
+                    assert(hash_index != m_capacity);
+                }
+            } while (m_data[hash_index++].get_key() != key);
+
+            return m_data[hash_index - 1];
+        }
+
         void remove(const TKey& key) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
@@ -507,7 +524,7 @@ namespace ccnt {
             return ConstIterator(m_data + m_capacity, m_head);
         }
 
-        ConstIterator cbegin() {
+        ConstIterator cbegin() const {
             auto* data = m_data;
             while (!data->get_hash_code()) {
                 data++;
@@ -515,7 +532,7 @@ namespace ccnt {
             return ConstIterator(data, m_head);
         } 
 
-        ConstIterator cend() {
+        ConstIterator cend() const {
             return ConstIterator(m_data + m_capacity, m_head);
         }
 
@@ -531,7 +548,7 @@ namespace ccnt {
             return ReverseIterator(m_data, m_data);
         }
 
-        ConstReverseIterator crbegin() {
+        ConstReverseIterator crbegin() const {
             auto* data = m_head;
             while (!data->get_hash_code()) {
                 data--;
@@ -539,7 +556,7 @@ namespace ccnt {
             return ConstReverseIterator(data, m_data);
         } 
 
-        ConstReverseIterator crend() {
+        ConstReverseIterator crend() const {
             return ConstReverseIterator(m_data, m_data);
         }
 
