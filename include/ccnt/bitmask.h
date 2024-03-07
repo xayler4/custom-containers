@@ -230,7 +230,7 @@ namespace ccnt {
     public:
         template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         Bitmask(bool value = false) {
-            if (value) {
+            if (!value) {
                 m_bitmask = 0;
             } 
             else {
@@ -240,7 +240,7 @@ namespace ccnt {
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         Bitmask(bool value = false) {
-            if (value) {
+            if (!value) {
                 for (std::uint32_t i = 0; i < size(); i++) {
                     m_bitmask[i] = 0;
                 }
