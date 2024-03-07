@@ -229,10 +229,28 @@ namespace ccnt {
 
     public:
         template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
-        Bitmask() : m_bitmask(0) {}
+        Bitmask(bool value = false) {
+            if (value) {
+                m_bitmask = 0;
+            } 
+            else {
+                m_bitmask = -1;
+            }
+        }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
-        Bitmask() : m_bitmask{0} {}
+        Bitmask(bool value = false) {
+            if (value) {
+                for (std::uint32_t i = 0; i < size(); i++) {
+                    m_bitmask[i] = 0;
+                }
+            } 
+            else {
+                for (std::uint32_t i = 0; i < size(); i++) {
+                    m_bitmask[i] = -1;
+                }
+            }
+        }
 
         template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         explicit Bitmask(uint_t bitmask) : m_bitmask(bitmask) {}
@@ -242,6 +260,30 @@ namespace ccnt {
             for (uint32_t i = 0; i < size(); i++) {
                 m_bitmask[i] = bitmask[i]; 
             } 
+        }
+
+        template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline void unset_all_bits() {
+            m_bitmask = 0;
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline void unset_all_bits() {
+            for (std::uint32_t i = 0; i < size(); i++) {
+                m_bitmask[i] = 0;
+            }
+        }
+
+        template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline void set_all_bits() {
+            m_bitmask = -1;
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline void set_all_bits() {
+            for (std::uint32_t i = 0; i < size(); i++) {
+                m_bitmask[i] = -1;
+            }
         }
 
         inline Bitmask<TBits>& operator = (const uint_t& bitmask) {
@@ -301,6 +343,31 @@ namespace ccnt {
             } 
         }
 
+        inline Bitmask<TBits> operator ^ (const uint_t& bitmask) const {
+            return Bitmask<TBits>(m_bitmask ^ bitmask);
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline Bitmask<TBits> operator ^ (const uint_t& bitmask) const {
+            uint_t out_bitmask;
+            for (std::uint32_t i = 0; i < size(); i++) {
+                out_bitmask[i] = m_bitmask[i] ^ bitmask[i]; 
+            } 
+            return Bitmask<TBits>(out_bitmask);
+        }
+
+        template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline void operator ^= (const uint_t& bitmask) {
+            m_bitmask ^= bitmask;
+        }
+
+        template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline void operator ^= (const uint_t& bitmask) {
+            for (std::uint32_t i = 0; i < size(); i++) {
+                m_bitmask[i] ^= bitmask[i]; 
+            } 
+        }
+
         template<typename T = uint_t, typename std::enable_if<!std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline bool operator == (const uint_t& bitmask) const {
             return m_bitmask == bitmask;
@@ -356,6 +423,16 @@ namespace ccnt {
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline void operator |= (const TBitmask& bitmask) {
             *this |= bitmask.m_bitmask;
+        }
+
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline Bitmask<TBits> operator ^ (const TBitmask& bitmask) const {
+            return Bitmask<TBits>(*this ^ bitmask.m_bitmask);
+        }
+        
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline void operator ^= (const TBitmask& bitmask) {
+            *this ^= bitmask.m_bitmask;
         }
         
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>

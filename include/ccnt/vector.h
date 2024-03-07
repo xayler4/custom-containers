@@ -139,7 +139,7 @@ namespace ccnt {
         }
 
         template<typename... Args>
-        TValue& emplace_back(Args&&... args) {
+        inline TValue& emplace_back(Args&&... args) {
             if (m_capacity == m_count) {
                 grow();
             }
@@ -148,7 +148,7 @@ namespace ccnt {
             return m_data[m_count - 1];
         }
 
-        TValue& push_back(const TValue& value) {
+        inline TValue& push_back(const TValue& value) {
             if (m_capacity == m_count) {
                 grow();
             }
@@ -158,7 +158,7 @@ namespace ccnt {
         }
 
         template<typename... Args>
-        TValue& emplace_front(Args&&... args) {
+        inline TValue& emplace_front(Args&&... args) {
             if (m_capacity == m_count) {
                 grow_front();
             }
@@ -175,7 +175,7 @@ namespace ccnt {
             return *m_data;
         }
 
-        TValue& push_front(const TValue& value) {
+        inline TValue& push_front(const TValue& value) {
             if (m_capacity == m_count) {
                 grow_front();
             }
@@ -192,13 +192,13 @@ namespace ccnt {
             return *m_data;
         }
 
-        void pop_back() {
+        inline void pop_back() {
             assert(m_count != 0);
             m_count--;
             std::destroy_at(m_data + m_count);
         }
 
-        void swap_and_pop(const TValue& value) {
+        inline void swap_and_pop(const TValue& value) {
             assert(m_count != 0);
             for (std::uint32_t i = 0; i < m_count; i++) {
                 if (m_data[i] == value) {
@@ -208,13 +208,13 @@ namespace ccnt {
             }
         }
 
-        void swap_and_pop_at(std::uint32_t index) {
+        inline void swap_and_pop_at(std::uint32_t index) {
             assert(index < m_count);
             m_data[index] = std::move(m_data[m_count - 1]);
             return pop_back();
         }
 
-        void erase(const TValue& value) {
+        inline void erase(const TValue& value) {
             assert(m_count != 0);
             for (std::uint32_t i = 0; i < m_count; i++) {
                 if (m_data[i] == value) {
@@ -226,14 +226,14 @@ namespace ccnt {
             }
         }
 
-        void erase_at(std::uint32_t index) {
+        inline void erase_at(std::uint32_t index) {
             assert(index < m_count);
             std::destroy_at(m_data + index);
             shrink(index);
             m_count--;
         }
 
-        void reserve(std::uint32_t capacity) {
+        inline void reserve(std::uint32_t capacity) {
             assert(capacity > m_capacity);
             m_capacity = capacity;
             TValue* tmp_data = m_data;
@@ -245,7 +245,7 @@ namespace ccnt {
             m_allocator.deallocate(tmp_data, m_capacity);
         }
 
-        void resize(std::uint32_t size, TValue c = TValue()) {
+        inline void resize(std::uint32_t size, TValue c = TValue()) {
             if (m_capacity < size) {
                 reserve(size);
             }
@@ -255,7 +255,7 @@ namespace ccnt {
             m_count = size;
         }
 
-        void clear() {
+        inline void clear() {
             for (std::uint32_t i = 0; i < m_count; i++) {
                 std::destroy_at(m_data + i);
             }
@@ -341,7 +341,7 @@ namespace ccnt {
         Vector& operator= (const Vector&) = default;
 
     private:
-        void grow() {
+        inline void grow() {
             std::uint32_t old_capacity = m_capacity;
             m_capacity *= 2;
             TValue* tmp_data = m_data;
@@ -353,7 +353,7 @@ namespace ccnt {
             m_allocator.deallocate(tmp_data, old_capacity);
         }
 
-        void grow_front() {
+        inline void grow_front() {
             std::uint32_t old_capacity = m_capacity;
             m_capacity *= 2;
             TValue* tmp_data = m_data;
@@ -365,7 +365,7 @@ namespace ccnt {
             m_allocator.deallocate(tmp_data, old_capacity);
         }
 
-        void shrink(std::uint32_t index) {
+        inline void shrink(std::uint32_t index) {
             m_capacity--;
             TValue* tmp_data = m_data;
             m_data = m_allocator.allocate(m_capacity);

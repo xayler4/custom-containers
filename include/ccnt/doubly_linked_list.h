@@ -280,7 +280,7 @@ namespace ccnt {
         }
 
         template<typename... TArgs>
-        Node<TValue>& emplace_after(Node<TValue>& previous, TArgs&&... args) {
+        inline Node<TValue>& emplace_after(Node<TValue>& previous, TArgs&&... args) {
             if (&previous == m_tail) {
                 return emplace_at_tail(std::forward<TArgs>(args)...);
             }
@@ -290,7 +290,7 @@ namespace ccnt {
             return *new_node;
         }
 
-        Node<TValue>& insert_after(Node<TValue>& previous, const TValue& value) {
+        inline Node<TValue>& insert_after(Node<TValue>& previous, const TValue& value) {
             if (&previous == m_tail) {
                 return insert_at_tail(value);
             }
@@ -301,7 +301,7 @@ namespace ccnt {
         }
 
         template<typename... TArgs>
-        Node<TValue>& emplace_before(Node<TValue>& next, TArgs&&... args) {
+        inline Node<TValue>& emplace_before(Node<TValue>& next, TArgs&&... args) {
             if (&next == m_head) {
                 return emplace_at_head(std::forward<TArgs>(args)...);
             }
@@ -312,7 +312,7 @@ namespace ccnt {
             return *new_node;
         }
 
-        Node<TValue>& insert_before(Node<TValue>& next, const TValue& value) {
+        inline Node<TValue>& insert_before(Node<TValue>& next, const TValue& value) {
             if (&next == m_head) {
                 return insert_at_head(value);
             }
@@ -323,7 +323,7 @@ namespace ccnt {
         }
 
         template<typename... TArgs>
-        Node<TValue>& emplace_at_tail(TArgs&&... args) {
+        inline Node<TValue>& emplace_at_tail(TArgs&&... args) {
             if (m_length == 0) {
                 std::construct_at(m_tail, this, nullptr, nullptr, std::forward<TArgs>(args)...);
                 m_length++;
@@ -338,7 +338,7 @@ namespace ccnt {
             return *m_tail;
         }
 
-        Node<TValue>& insert_at_tail(const TValue& value) {
+        inline Node<TValue>& insert_at_tail(const TValue& value) {
             if (m_length == 0) {
                 std::construct_at(m_tail, this, nullptr, nullptr, value);
                 m_length++;
@@ -354,7 +354,7 @@ namespace ccnt {
         }
 
         template<typename... TArgs>
-        Node<TValue>& emplace_at_head(TArgs&&... args) {
+        inline Node<TValue>& emplace_at_head(TArgs&&... args) {
             if (m_length == 0) {
                 std::construct_at(m_head, this, nullptr, nullptr, std::forward<TArgs>(args)...);
                 m_length++;
@@ -369,7 +369,7 @@ namespace ccnt {
             return *m_head;
         }
 
-        Node<TValue>& insert_at_head(const TValue& value) {
+        inline Node<TValue>& insert_at_head(const TValue& value) {
             if (m_length == 0) {
                 std::construct_at(m_head, this, nullptr, nullptr, value);
                 m_length++;
@@ -385,7 +385,7 @@ namespace ccnt {
             return *m_head;
         }
 
-        Node<TValue>* erase(Node<TValue>& node) {
+        inline Node<TValue>* erase(Node<TValue>& node) {
             assert(m_length);
             if (&node == m_tail) {
                 return pop_tail();
@@ -400,7 +400,7 @@ namespace ccnt {
             return next;
         }
 
-        Node<TValue>* pop_tail() {
+        inline Node<TValue>* pop_tail() {
             assert(m_length);
             if (m_length == 1) {
                 std::destroy_at(m_tail);
@@ -421,7 +421,7 @@ namespace ccnt {
             return m_tail;
         }
 
-        Node<TValue>* pop_head() {
+        inline Node<TValue>* pop_head() {
             assert(m_length);
 
             if (m_length == 1) {

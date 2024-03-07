@@ -195,7 +195,27 @@ namespace ccnt {
             m_allocator.deallocate(m_bitmasks, m_capacity);
         }
 
-        void push_bit(bool value) {
+        inline void set_all_bits() {
+            std::uint32_t index = m_count/TBitsGrowth;
+            std::uint32_t relative_bit = m_count - index * TBitsGrowth;
+
+            for (std::uint32_t i = 0; i < index; i++) {
+                m_bitmasks[i].set_all_bits();
+            }
+            for (std::uint32_t i = 0; i < relative_bit; i++) {
+                m_bitmasks[index].set_bit(relative_bit);
+            }
+        }
+
+        inline void unset_all_bits() {
+            std::uint32_t index = m_count/TBitsGrowth;
+
+            for (std::uint32_t i = 0; i < index + 1; i++) {
+                m_bitmasks[i].unset_all_bits();
+            }
+        }
+
+        inline void push_bit(bool value) {
             std::uint32_t index = m_count/TBitsGrowth;
             std::uint32_t relative_bit = m_count - index * TBitsGrowth;
 
@@ -211,7 +231,7 @@ namespace ccnt {
             m_count++;
         }
 
-        void pop_bit() {
+        inline void pop_bit() {
             assert(m_count != 0);
 
             std::uint32_t index = m_count/TBitsGrowth;
@@ -221,7 +241,7 @@ namespace ccnt {
             m_count--;
         }
 
-        void set_bit(std::uint32_t nbit) {
+        inline void set_bit(std::uint32_t nbit) {
             assert(nbit < m_count);
 
             std::uint32_t index = nbit/TBitsGrowth;
@@ -230,7 +250,7 @@ namespace ccnt {
             m_bitmasks[index].set_bit(relative_bit);
         }
 
-        void unset_bit(std::uint32_t nbit) {
+        inline void unset_bit(std::uint32_t nbit) {
             assert(nbit < m_count);
 
             std::uint32_t index = nbit/TBitsGrowth;
@@ -239,16 +259,17 @@ namespace ccnt {
             m_bitmasks[index].unset_bit(relative_bit);
         }
 
-        void resize(std::uint32_t count) {
+        inline void resize(std::uint32_t count, bool value = false) {
+            std::uint32_t index = count/TBitsGrowth;
+            std::uint32_t relative_bit = count - (index) * TBitsGrowth;
+
             if (count == 0) {
                 return clear();
             }
             if (count < m_count) {
                 std::uint32_t old_index = m_count/TBitsGrowth;
-                std::uint32_t index = count/TBitsGrowth;
-                std::uint32_t relative_bit = count - (index) * TBitsGrowth;
                 
-                for (std::uint32_t i = index + 1; i < old_index; i++) {
+                for (std::uint32_t i = index; i < old_index; i++) {
                     std::construct_at(m_bitmasks + i);
                 }
 
@@ -257,16 +278,22 @@ namespace ccnt {
                 }
             } 
             else {
-                std::uint32_t index = count/TBitsGrowth;
                 if (m_capacity <= index) {
                     reserve(count);
                 } 
+
+                if (value){
+                    for (; relative_bit < TBitsGrowth; relative_bit++) {
+                        m_bitmasks[index].set_bit(relative_bit);
+                    }
+                }
             }
+
 
             m_count = count;
         }
 
-        void reserve(std::uint32_t nbits) {
+        inline void reserve(std::uint32_t nbits) {
             std::uint32_t capacity = nbits/TBitsGrowth + 1;
             assert(m_capacity < capacity);
 
@@ -282,7 +309,7 @@ namespace ccnt {
             m_capacity = capacity;
         }
 
-        void clear() {
+        inline void clear() {
             std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 std::construct_at(m_bitmasks + i);
@@ -396,6 +423,48 @@ namespace ccnt {
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
                 m_bitmasks[i] &= bitmask;
+            }
+
+            return *this;
+        }
+
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline DynamicBitmask<TBitsGrowth> operator ^ (const TBitmask& bitmask) const {
+            assert(m_count != 0);
+
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            DynamicBitmask out_bitmask(m_count);
+            out_bitmask.resize(m_count);
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                out_bitmask.m_bitmasks[i] ^= bitmask;
+            }
+
+            return out_bitmask;
+        }
+
+        inline DynamicBitmask<TBitsGrowth>& operator ^= (const DynamicBitmask<TBitsGrowth>& bitmask) {
+            assert(bitmask.m_count <= m_count);
+            assert(bitmask.m_count != 0);
+
+            std::uint32_t nbitmasks = bitmask.m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                m_bitmasks[i] ^= bitmask.m_bitmasks[i];
+            }
+
+            return *this;
+        }
+
+        template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
+        inline DynamicBitmask<TBitsGrowth>& operator ^= (const TBitmask& bitmask) {
+            assert(m_count != 0);
+            
+            std::uint32_t nbitmasks = m_count/TBitsGrowth + 1;
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                m_bitmasks[i] ^= bitmask;
             }
 
             return *this;
@@ -625,7 +694,7 @@ namespace ccnt {
         DynamicBitmask& operator = (const DynamicBitmask&) = delete;
 
     private:
-        void grow() {
+        inline void grow() {
             Bitmask<TBitsGrowth>* tmp_bitmask = m_bitmasks;
             m_bitmasks = m_allocator.allocate(m_capacity + 1);
             for (std::uint32_t i = 0; i < m_capacity; i++) {

@@ -386,7 +386,7 @@ namespace ccnt {
         }
 
         template<typename... TArgs>
-        HashNode<TKey, TValue>& emplace(const TKey& key, TArgs&&... args) {
+        inline HashNode<TKey, TValue>& emplace(const TKey& key, TArgs&&... args) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
@@ -404,7 +404,7 @@ namespace ccnt {
             return m_data[hash_index];
         }
 
-        HashNode<TKey, TValue>& insert(const TKey& key, const TValue& value ) {
+        inline HashNode<TKey, TValue>& insert(const TKey& key, const TValue& value ) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
@@ -434,7 +434,7 @@ namespace ccnt {
             hash_map.m_capacity = 0;
         }
 
-        HashNode<TKey, TValue>& operator [] (const TKey& key) {
+        inline HashNode<TKey, TValue>& operator [] (const TKey& key) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
@@ -451,7 +451,7 @@ namespace ccnt {
             return m_data[hash_index - 1];
         }
 
-        const HashNode<TKey, TValue>& operator [] (const TKey& key) const {
+        inline const HashNode<TKey, TValue>& operator [] (const TKey& key) const {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
@@ -468,7 +468,7 @@ namespace ccnt {
             return m_data[hash_index - 1];
         }
 
-        void remove(const TKey& key) {
+        inline void remove(const TKey& key) {
             std::uint32_t hash_code = HashCode<TKey>::hash_code(key);
             assert(hash_code != 0);
             std::uint32_t hash_index = THashIndex::hash_index(hash_code, m_capacity);
@@ -485,7 +485,7 @@ namespace ccnt {
             std::destroy_at(m_data + hash_index - 1);
         }
 
-        void clear() {
+        inline void clear() {
             for (std::uint32_t i = 0; i < m_capacity; i++) {
                 std::uint32_t destroyed = 0;
                 if (m_data[i].get_hash_code()) {
@@ -564,7 +564,7 @@ namespace ccnt {
         HashMap& operator= (const HashMap&) = default;
 
     private:
-        void grow(std::uint32_t new_capacity) {
+        inline void grow(std::uint32_t new_capacity) {
             std::uint32_t old_capacity = m_capacity;
             m_capacity = new_capacity;
             HashNode<TKey, TValue>* tmp_data = m_data;

@@ -132,7 +132,7 @@ namespace ccnt  {
         CircularArray& operator= (const CircularArray&) = default;
         
         template<typename... TArgs>
-        void emplace(TArgs&&... args) {
+        inline void emplace(TArgs&&... args) {
             if (m_current == m_data + TCapacity - 1) {
                 m_current = m_data;
             }
@@ -145,7 +145,7 @@ namespace ccnt  {
             *(m_current) = std::move<TValue>(TValue(std::forward<TArgs>(args)...));
         }
 
-        void push(const TValue& value) {
+        inline void push(const TValue& value) {
             if (m_current == m_data + TCapacity - 1) {
                 m_current = m_data;
             }

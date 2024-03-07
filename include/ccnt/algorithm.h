@@ -22,7 +22,7 @@ namespace ccnt {
     };
 
     template<typename TIterator, typename std::enable_if<std::is_same<SparseIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last) {
+    inline void sort(TIterator first, TIterator last) {
         std::uint32_t i = 0;
         std::uint32_t max;
         bool sorted;
@@ -55,7 +55,7 @@ namespace ccnt {
     }
 
     template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<SparseIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last, TCompare cmp) {
+    inline void sort(TIterator first, TIterator last, TCompare cmp) {
         std::uint32_t i = 0;
         std::uint32_t max;
         bool sorted;
@@ -88,7 +88,7 @@ namespace ccnt {
     }
 
     template<typename TIterator, typename std::enable_if<std::is_same<ListIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last) {
+    inline void sort(TIterator first, TIterator last) {
         std::uint32_t i = 0;
         std::uint32_t max;
         bool sorted;
@@ -122,7 +122,7 @@ namespace ccnt {
     }
     
     template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<ListIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last, TCompare cmp) {
+    inline void sort(TIterator first, TIterator last, TCompare cmp) {
         std::uint32_t i = 0;
         std::uint32_t max;
         bool sorted;
@@ -157,7 +157,7 @@ namespace ccnt {
     
 
     template<typename TIterator, typename std::enable_if<std::is_same<IndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last) {
+    inline void sort(TIterator first, TIterator last) {
         typename TIterator::Pointer data = &(*first);
         typename TIterator::Pointer data_end = &(*last);
         assert(data < data_end);
@@ -176,7 +176,7 @@ namespace ccnt {
     }
 
     template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<IndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last, TCompare cmp) {
+    inline void sort(TIterator first, TIterator last, TCompare cmp) {
         typename TIterator::Pointer data = &(*first);
         typename TIterator::Pointer data_end = &(*last);
         assert(data < data_end);
@@ -195,7 +195,7 @@ namespace ccnt {
     }
 
     template<typename TIterator, typename std::enable_if<std::is_same<ReverseIndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last) {
+    inline void sort(TIterator first, TIterator last) {
         typename TIterator::Pointer data_end = &(*first);
         typename TIterator::Pointer data = &(*last);
         assert(data_end < data);
@@ -214,7 +214,7 @@ namespace ccnt {
     }
 
     template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<ReverseIndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    void sort(TIterator first, TIterator last, TCompare cmp) {
+    inline void sort(TIterator first, TIterator last, TCompare cmp) {
         typename TIterator::Pointer data_end = &(*first);
         typename TIterator::Pointer data = &(*last);
         assert(data_end < data);
