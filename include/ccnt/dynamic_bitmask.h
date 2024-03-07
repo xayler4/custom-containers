@@ -428,6 +428,22 @@ namespace ccnt {
             return *this;
         }
 
+        inline DynamicBitmask<TBitsGrowth> operator ^ (const DynamicBitmask<TBitsGrowth>& bitmask) const {
+            assert(bitmask.m_count <= m_count);
+            assert(bitmask.m_count != 0);
+
+            std::uint32_t nbitmasks = bitmask.m_count/TBitsGrowth + 1;
+
+            DynamicBitmask out_bitmask(bitmask.m_count);
+            out_bitmask.resize(bitmask.m_count);
+
+            for (std::uint32_t i = 0; i < nbitmasks; i++) {
+                out_bitmask.m_bitmasks[i] ^= bitmask.m_bitmasks[i];
+            }
+
+            return out_bitmask;
+        }
+
         template<typename TBitmask, typename std::enable_if<std::is_same<uint_t, typename TBitmask::uint_t>::value || !std::is_same<typename TBitmask::uint_t, std::array<std::uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
         inline DynamicBitmask<TBitsGrowth> operator ^ (const TBitmask& bitmask) const {
             assert(m_count != 0);
