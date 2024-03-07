@@ -446,31 +446,31 @@ namespace ccnt {
         }
         
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint8_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator[] (std::uint32_t nbit) const {
+        inline bool operator [] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x80;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint16_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator[] (std::uint32_t nbit) const {
+        inline bool operator [] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x8000;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint32_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator[] (std::uint32_t nbit) const {
+        inline bool operator [] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x80000000;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::uint64_t>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator[] (std::uint32_t nbit) const {
+        inline bool operator [] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             return (m_bitmask << (nbit + (sizeof(uint_t) * 8 - TBits))) & 0x8000000000000000;
         }
 
         template<typename T = uint_t, typename std::enable_if<std::is_same<T, std::array<uint64_t, size()>>::value, std::nullptr_t>::type = nullptr>
-        inline bool operator[] (std::uint32_t nbit) const {
+        inline bool operator [] (std::uint32_t nbit) const {
             assert(nbit < TBits);
             std::uint32_t index = nbit / 64;
             return (m_bitmask[index] << (nbit + (sizeof(uint_t) * 8 - (TBits - (index * 64))))) & 0x8000000000000000;

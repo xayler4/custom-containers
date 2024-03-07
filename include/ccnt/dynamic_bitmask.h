@@ -185,6 +185,13 @@ namespace ccnt {
             }
         }
 
+        DynamicBitmask(const DynamicBitmask<TBitsGrowth>& bitmask) : m_count(bitmask.m_count), m_capacity(bitmask.m_capacity), m_allocator(bitmask.m_allocator) {
+            m_allocator.allocate(m_capacity);
+            for (std::uint32_t i = 0; i < m_capacity; i++) {
+                m_bitmasks[i] = bitmask.m_bitmasks[i];
+            }
+        }
+
         DynamicBitmask(DynamicBitmask<TBitsGrowth>&& bitmask) : m_bitmasks(bitmask.m_bitmasks), m_count(bitmask.m_count), m_capacity(bitmask.m_capacity), m_allocator(bitmask.m_allocator) {
             bitmask.m_bitmasks = nullptr;
             bitmask.m_count = 0;
@@ -323,6 +330,17 @@ namespace ccnt {
             std::uint32_t relative_bit = nbit - index * TBitsGrowth;
 
             return m_bitmasks[index][relative_bit];
+        }
+
+        inline DynamicBitmask<TBitsGrowth>& operator = (const DynamicBitmask<TBitsGrowth>& bitmask) {
+            m_count = bitmask.m_count;
+            m_capacity = bitmask.m_capacity;
+            m_allocator = bitmask.m_allocator;
+
+            m_allocator.allocate(m_capacity);
+            for (std::uint32_t i = 0; i < m_capacity; i++) {
+                m_bitmasks[i] = bitmask.m_bitmasks[i];
+            }
         }
 
         inline DynamicBitmask<TBitsGrowth>& operator = (DynamicBitmask<TBitsGrowth>&& bitmask) {
@@ -705,9 +723,6 @@ namespace ccnt {
         ConstReverseIterator crend() const {
             return ConstReverseIterator(this, 0);
         }
-
-        DynamicBitmask(const DynamicBitmask&) = delete;
-        DynamicBitmask& operator = (const DynamicBitmask&) = delete;
 
     private:
         inline void grow() {
