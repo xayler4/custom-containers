@@ -341,6 +341,8 @@ namespace ccnt {
             for (std::uint32_t i = 0; i < m_capacity; i++) {
                 m_bitmasks[i] = bitmask.m_bitmasks[i];
             }
+
+            return *this;
         }
 
         inline DynamicBitmask<TBitsGrowth>& operator = (DynamicBitmask<TBitsGrowth>&& bitmask) {
