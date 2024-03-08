@@ -186,7 +186,7 @@ namespace ccnt {
         }
 
         DynamicBitmask(const DynamicBitmask<TBitsGrowth>& bitmask) : m_count(bitmask.m_count), m_capacity(bitmask.m_capacity), m_allocator(bitmask.m_allocator) {
-            m_allocator.allocate(m_capacity);
+            m_bitmasks = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < m_capacity; i++) {
                 m_bitmasks[i] = bitmask.m_bitmasks[i];
             }
@@ -337,7 +337,7 @@ namespace ccnt {
             m_capacity = bitmask.m_capacity;
             m_allocator = bitmask.m_allocator;
 
-            m_allocator.allocate(m_capacity);
+            m_bitmasks = m_allocator.allocate(m_capacity);
             for (std::uint32_t i = 0; i < m_capacity; i++) {
                 m_bitmasks[i] = bitmask.m_bitmasks[i];
             }
