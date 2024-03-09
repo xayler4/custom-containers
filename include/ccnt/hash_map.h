@@ -501,6 +501,9 @@ namespace ccnt {
         }
 
         Iterator begin() {
+            if (m_count == 0) {
+                return Iterator(m_head, m_head);
+            }
             auto* data = m_data;
             while (!data->get_hash_code()) {
                 data++;
@@ -513,6 +516,9 @@ namespace ccnt {
         }
 
         ConstIterator begin() const {
+            if (m_count == 0) {
+                return Iterator(m_head, m_head);
+            }
             auto* data = m_data;
             while (!data->get_hash_code()) {
                 data++;
@@ -537,6 +543,9 @@ namespace ccnt {
         }
 
         ReverseIterator rbegin() {
+            if (m_count == 0) {
+                return Iterator(m_head, m_data);
+            }
             auto* data = m_head;
             while (!data->get_hash_code()) {
                 data--;
@@ -549,6 +558,9 @@ namespace ccnt {
         }
 
         ConstReverseIterator crbegin() const {
+            if (m_count == 0) {
+                return Iterator(m_head, m_data);
+            }
             auto* data = m_head;
             while (!data->get_hash_code()) {
                 data--;
