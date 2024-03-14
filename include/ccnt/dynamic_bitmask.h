@@ -400,7 +400,7 @@ namespace ccnt {
             out_bitmask.resize(bitmask.m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] &= bitmask.m_bitmasks[i];
+                out_bitmask.m_bitmasks[i] = m_bitmasks[i] & bitmask.m_bitmasks[i];
             }
 
             return out_bitmask;
@@ -416,7 +416,7 @@ namespace ccnt {
             out_bitmask.resize(m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] &= bitmask;
+                out_bitmask.m_bitmasks[i] = m_bitmasks[i] & bitmask.m_bitmasks[i];
             }
 
             return out_bitmask;
@@ -458,7 +458,7 @@ namespace ccnt {
             out_bitmask.resize(bitmask.m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] ^= bitmask.m_bitmasks[i];
+                out_bitmask.m_bitmasks[i] = m_bitmasks[i] ^ bitmask.m_bitmasks[i];
             }
 
             return out_bitmask;
@@ -474,7 +474,7 @@ namespace ccnt {
             out_bitmask.resize(m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] ^= bitmask;
+                out_bitmask.m_bitmasks[i] = m_bitmasks[i] ^ bitmask.m_bitmasks[i];
             }
 
             return out_bitmask;
@@ -516,7 +516,7 @@ namespace ccnt {
             out_bitmask.resize(bitmask.m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] |= bitmask.m_bitmasks[i];
+                out_bitmask.m_bitmasks[i] = m_bitmasks[i] | bitmask.m_bitmasks[i];
             }
 
             return out_bitmask;
@@ -532,7 +532,7 @@ namespace ccnt {
             out_bitmask.resize(m_count);
 
             for (std::uint32_t i = 0; i < nbitmasks; i++) {
-                out_bitmask.m_bitmasks[i] |= bitmask;
+                out_bitmask.m_bitmasks[i] = m_bitmasks[i] | bitmask.m_bitmasks[i];
             }
 
             return out_bitmask;
