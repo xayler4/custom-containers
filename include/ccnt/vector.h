@@ -11,7 +11,7 @@ namespace ccnt {
     public:
         class Iterator {
         public:
-            using Type = IndexableIterator;
+            using Type = RandomAccessIterator;
             using ValueType = TValue;
             using Pointer   = TValue*;
             using Reference = TValue&;
@@ -30,8 +30,36 @@ namespace ccnt {
                 return m_data; 
             }
 
+            Iterator operator + (std::uint32_t index) {
+                return Iterator(m_data + index);
+            }
+
+            Iterator& operator += (std::uint32_t index) {
+                m_data += index;
+
+                return *this;
+            }
+
+            Iterator operator - (std::uint32_t index) {
+                return Iterator(m_data - index);
+            }
+
+            Iterator& operator -= (std::uint32_t index) {
+                m_data -= index;
+
+                return *this;
+            }
+
+            std::int32_t operator - (const Iterator& iterator) {
+                return m_data - iterator.m_data;
+            }
+
             void operator ++ () {
                 m_data++;
+            }
+
+            void operator -- () {
+                m_data--;
             }
 
             bool operator == (const Iterator& it) {
@@ -48,7 +76,7 @@ namespace ccnt {
 
         class ReverseIterator : public Iterator {
         public:
-            using Type = ReverseIndexableIterator;
+            using Type = RandomAccessIterator;
             using ValueType = TValue;
             using Pointer   = TValue*;
             using Reference = TValue&;
@@ -57,14 +85,58 @@ namespace ccnt {
             ReverseIterator(Pointer pointer) : Iterator(pointer) {}
             ~ReverseIterator() = default;
 
+            Reference operator * () {
+                return *(Iterator::m_data - 1);
+            }
+
+            Pointer operator -> () {
+                return Iterator::m_data - 1; 
+            }
+
+            ReverseIterator operator + (std::uint32_t index) {
+                return ReverseIterator(Iterator::m_data - index);
+            }
+
+            ReverseIterator& operator += (std::uint32_t index) {
+                Iterator::m_data -= index;
+
+                return *this;
+            }
+
+            ReverseIterator operator - (std::uint32_t index) {
+                return ReverseIterator(Iterator::m_data + index);
+            }
+
+            ReverseIterator& operator -= (std::uint32_t index) {
+                Iterator::m_data += index;
+
+                return *this;
+            }
+
+            std::int32_t operator - (const ReverseIterator& iterator) {
+                return Iterator::m_data - iterator.m_data;
+            }
+
             void operator ++ () {
                 Iterator::m_data--;
+            }
+
+            void operator -- () {
+                Iterator::m_data++;
+            }
+
+            bool operator == (const ReverseIterator& it) {
+                return Iterator::m_data == it.m_data;
+            }
+
+            bool operator != (const ReverseIterator& it) {
+                return Iterator::m_data != it.m_data;
             }
         };
 
         class ConstIterator {
         public:
-            using Type = IndexableIterator;
+            using Type = RandomAccessIterator;
             using ValueType = const TValue;
             using Pointer   = const TValue*;
             using Reference = const TValue&;
@@ -83,8 +155,36 @@ namespace ccnt {
                 return m_data; 
             }
 
+            ConstIterator operator + (std::uint32_t index) {
+                return ConstIterator(m_data + index);
+            }
+
+            ConstIterator& operator += (std::uint32_t index) {
+                m_data += index;
+
+                return *this;
+            }
+
+            ConstIterator operator - (std::uint32_t index) {
+                return ConstIterator(m_data - index);
+            }
+
+            ConstIterator& operator -= (std::uint32_t index) {
+                m_data -= index;
+
+                return *this;
+            }
+
+            std::int32_t operator - (const ConstIterator& iterator) {
+                return m_data - iterator.m_data;
+            }
+
             void operator ++ () {
                 m_data++;
+            }
+
+            void operator -- () {
+                m_data--;
             }
 
             bool operator == (const ConstIterator& it) const {
@@ -101,7 +201,7 @@ namespace ccnt {
 
         class ConstReverseIterator : public ConstIterator {
         public:
-            using Type = ReverseIndexableIterator;
+            using Type = RandomAccessIterator;
             using ValueType = const TValue;
             using Pointer   = const TValue*;
             using Reference = const TValue&;
@@ -110,8 +210,48 @@ namespace ccnt {
             ConstReverseIterator(TValue* data) : ConstIterator(data) {}
             ~ConstReverseIterator() = default;
 
+            Reference operator * () {
+                return *(ConstIterator::m_data - 1);
+            }
+
+            Pointer operator -> () {
+                return ConstIterator::m_data - 1; 
+            }
+
+            ConstReverseIterator operator + (std::uint32_t index) {
+                return ConstReverseIterator(ConstIterator::m_data - index);
+            }
+
+            ConstReverseIterator& operator += (std::uint32_t index) {
+                ConstIterator::m_data -= index;
+
+                return *this;
+            }
+
+            ConstReverseIterator operator - (std::uint32_t index) {
+                return ConstReverseIterator(ConstIterator::m_data + index);
+            }
+
+            ConstReverseIterator& operator -= (std::uint32_t index) {
+                ConstIterator::m_data += index;
+
+                return *this;
+            }
+
             void operator ++ () {
                 ConstIterator::m_data--;
+            }
+
+            void operator -- () {
+                ConstIterator::m_data++;
+            }
+
+            bool operator == (const ConstReverseIterator& it) const {
+                return ConstIterator::m_data == it.m_data;
+            }
+
+            bool operator != (const ConstReverseIterator& it) const {
+                return ConstIterator::m_data != it.m_data;
             }
         };
 

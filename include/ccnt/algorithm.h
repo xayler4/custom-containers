@@ -5,11 +5,7 @@
 #include <utility> 
 
 namespace ccnt {
-    class IndexableIterator {
-
-    };
-
-    class ReverseIndexableIterator {
+    class RandomAccessIterator {
 
     };
 
@@ -154,81 +150,115 @@ namespace ccnt {
             }
         } while (i++ != max && !sorted);
     }
+
+    template<typename TIterator, typename std::enable_if<std::is_same<RandomAccessIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
+    inline void sort(TIterator first, TIterator last) {
+        TIterator i = first + 1;
+        for (; i != last; ++i) {
+            typename TIterator::ValueType key = std::move(*i);
+            TIterator j = i - 1;
+
+            while (j != (first - 1) && key < *j) {
+                TIterator j_plus_1 = j + 1;
+                *j_plus_1 = std::move(*j);
+                --j;
+            }
+            TIterator j_plus_1 = j + 1;
+            *j_plus_1 = std::move(key);
+        }
+    }
+    
+    template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<RandomAccessIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
+    inline void sort(TIterator first, TIterator last, TCompare cmp) {
+        TIterator i = first + 1;
+        for (; i != last; ++i) {
+            typename TIterator::ValueType key = std::move(*i);
+            TIterator j = i - 1;
+
+            while (abs(j - first) >= 0 && cmp(key, *j)) {
+                TIterator j_plus_1 = j + 1;
+                *j_plus_1 = std::move(*j);
+                --j;
+            }
+            TIterator j_plus_1 = j + 1;
+            *j_plus_1 = std::move(key);
+        }
+    }
     
 
-    template<typename TIterator, typename std::enable_if<std::is_same<IndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    inline void sort(TIterator first, TIterator last) {
-        typename TIterator::Pointer data = &(*first);
-        typename TIterator::Pointer data_end = &(*last);
-        assert(data < data_end);
+    /* template<typename TIterator, typename std::enable_if<std::is_same<RandomAccessIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr> */
+    /* inline void sort(TIterator first, TIterator last) { */
+    /*     typename TIterator::Pointer data = &(*first); */
+    /*     typename TIterator::Pointer data_end = &(*last); */
+    /*     assert(data < data_end); */
 
-        std::uint32_t count = data_end - data;
-        for (std::uint32_t i = 1; i < count; i++) {
-            typename TIterator::ValueType key = std::move(data[i]);
-            std::int32_t j = i - 1;
+    /*     std::uint32_t count = data_end - data; */
+    /*     for (std::uint32_t i = 1; i < count; i++) { */
+    /*         typename TIterator::ValueType key = std::move(data[i]); */
+    /*         std::int32_t j = i - 1; */
 
-            while (j >= 0 && key < data[j]) {
-                data[j + 1] = std::move(data[j]);
-                j--;
-            }
-            data[j + 1] = std::move(key);
-        }
-    }
+    /*         while (j >= 0 && key < data[j]) { */
+    /*             data[j + 1] = std::move(data[j]); */
+    /*             j--; */
+    /*         } */
+    /*         data[j + 1] = std::move(key); */
+    /*     } */
+    /* } */
 
-    template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<IndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    inline void sort(TIterator first, TIterator last, TCompare cmp) {
-        typename TIterator::Pointer data = &(*first);
-        typename TIterator::Pointer data_end = &(*last);
-        assert(data < data_end);
+    /* template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<RandomAccessIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr> */
+    /* inline void sort(TIterator first, TIterator last, TCompare cmp) { */
+    /*     typename TIterator::Pointer data = &(*first); */
+    /*     typename TIterator::Pointer data_end = &(*last); */
+    /*     assert(data < data_end); */
 
-        std::uint32_t count = data_end - data;
-        for (std::uint32_t i = 1; i < count; i++) {
-            typename TIterator::ValueType key = std::move(data[i]);
-            std::int32_t j = i - 1;
+    /*     std::uint32_t count = data_end - data; */
+    /*     for (std::uint32_t i = 1; i < count; i++) { */
+    /*         typename TIterator::ValueType key = std::move(data[i]); */
+    /*         std::int32_t j = i - 1; */
 
-            while (j >= 0 && cmp(key, data[j])) {
-                data[j + 1] = std::move(data[j]);
-                j--;
-            }
-            data[j + 1] = std::move(key);
-        }
-    }
+    /*         while (j >= 0 && cmp(key, data[j])) { */
+    /*             data[j + 1] = std::move(data[j]); */
+    /*             j--; */
+    /*         } */
+    /*         data[j + 1] = std::move(key); */
+    /*     } */
+    /* } */
 
-    template<typename TIterator, typename std::enable_if<std::is_same<ReverseIndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    inline void sort(TIterator first, TIterator last) {
-        typename TIterator::Pointer data_end = &(*first);
-        typename TIterator::Pointer data = &(*last);
-        assert(data_end < data);
+    /* template<typename TIterator, typename std::enable_if<std::is_same<ReverseRandomAccessIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr> */
+    /* inline void sort(TIterator first, TIterator last) { */
+    /*     typename TIterator::Pointer data_end = &(*first); */
+    /*     typename TIterator::Pointer data = &(*last); */
+    /*     assert(data_end < data); */
 
-        std::uint32_t count = data_end - data;
-        for (std::int32_t i = count - 2; i >= 0; i--) {
-            typename TIterator::ValueType key = std::move(data[i]);
-            std::int32_t j = i + 1;
+    /*     std::uint32_t count = data_end - data; */
+    /*     for (std::int32_t i = count - 2; i >= 0; i--) { */
+    /*         typename TIterator::ValueType key = std::move(data[i]); */
+    /*         std::int32_t j = i + 1; */
 
-            while (j < count && key < data[j]) {
-                data[j - 1] = std::move(data[j]);
-                j++;
-            }
-            data[j - 1] = std::move(key);
-        }
-    }
+    /*         while (j < count && key < data[j]) { */
+    /*             data[j - 1] = std::move(data[j]); */
+    /*             j++; */
+    /*         } */
+    /*         data[j - 1] = std::move(key); */
+    /*     } */
+    /* } */
 
-    template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<ReverseIndexableIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr>
-    inline void sort(TIterator first, TIterator last, TCompare cmp) {
-        typename TIterator::Pointer data_end = &(*first);
-        typename TIterator::Pointer data = &(*last);
-        assert(data_end < data);
+    /* template<typename TIterator, typename TCompare, typename std::enable_if<std::is_same<ReverseRandomAccessIterator, typename TIterator::Type>::value, std::nullptr_t>::type = nullptr> */
+    /* inline void sort(TIterator first, TIterator last, TCompare cmp) { */
+    /*     typename TIterator::Pointer data_end = &(*first); */
+    /*     typename TIterator::Pointer data = &(*last); */
+    /*     assert(data_end < data); */
 
-        std::uint32_t count = data_end - data;
-        for (std::int32_t i = count - 2; i >= 0; i--) {
-            typename TIterator::ValueType key = std::move(data[i]);
-            std::int32_t j = i + 1;
+    /*     std::uint32_t count = data_end - data; */
+    /*     for (std::int32_t i = count - 2; i >= 0; i--) { */
+    /*         typename TIterator::ValueType key = std::move(data[i]); */
+    /*         std::int32_t j = i + 1; */
 
-            while (j < count && cmp(key, data[j])) {
-                data[j - 1] = std::move(data[j]);
-                j++;
-            }
-            data[j - 1] = std::move(key);
-        }
-    }
+    /*         while (j < count && cmp(key, data[j])) { */
+    /*             data[j - 1] = std::move(data[j]); */
+    /*             j++; */
+    /*         } */
+    /*         data[j - 1] = std::move(key); */
+    /*     } */
+    /* } */
 }
