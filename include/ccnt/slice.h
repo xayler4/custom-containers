@@ -3,6 +3,9 @@
 namespace ccnt {
     template<typename T, typename TIterator = T::Iterator, typename = std::nullptr_t>
     class Slice {
+        Slice(T& container) : m_begin(container.begin()), m_end(container.end()) {
+        }
+
         Slice(TIterator begin, TIterator end) : m_begin(begin), m_end(end) {
         }
 
@@ -30,6 +33,9 @@ namespace ccnt {
     template<typename T, typename TIterator>
     class Slice<T, TIterator, typename std::enable_if<std::is_same<RandomAccessIterator, typename TIterator::Type>::value, std::nullptr_t>::type> {
     public:
+        Slice(T& container) : m_begin(container.begin()), m_end(container.end()), m_count(abs(m_end - m_begin)) {
+        }
+
         Slice(TIterator begin, TIterator end) : m_begin(begin), m_end(end), m_count(abs(m_end - m_begin)) {
         }
 
