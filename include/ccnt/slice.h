@@ -3,6 +3,7 @@
 namespace ccnt {
     template<typename T, typename TIterator = T::Iterator, typename = std::nullptr_t>
     class Slice {
+    public:
         Slice(T& container) : m_begin(container.begin()), m_end(container.end()) {
         }
 
