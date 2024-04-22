@@ -392,6 +392,9 @@ namespace ccnt {
             for (std::uint32_t i = m_count; i < size; i++) {
                 std::construct_at(m_data + i, v);
             }
+            for (std::uint32_t i = size; i < m_count; i++) {
+                std::destroy_at(m_data + i);
+            }
             m_count = size;
         }
 
@@ -471,11 +474,11 @@ namespace ccnt {
             return ConstIterator(m_data);
         }
 
-        ReverseIterator rbegin() const {
+        ReverseIterator rbegin() {
             return ReverseIterator(m_data + m_count);
         }
 
-        ReverseIterator rend() const {
+        ReverseIterator rend() {
             return ReverseIterator(m_data);
         }
 

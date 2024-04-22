@@ -477,7 +477,7 @@ namespace ccnt {
             return ReverseIterator(nullptr);
         }
 
-        ConstReverseIterator crbegin() {
+        ConstReverseIterator crbegin() const {
             return ConstReverseIterator(m_tail);
         }
 

@@ -352,11 +352,11 @@ namespace ccnt  {
             return ReverseIterator(m_data);
         }
 
-        ConstReverseIterator crbegin() {
+        ConstReverseIterator crbegin() const {
             return ConstReverseIterator(m_data + TCapacity);
         }
 
-        ConstReverseIterator crend() {
+        ConstReverseIterator crend() const {
             return ConstReverseIterator(m_data);
         }
 
