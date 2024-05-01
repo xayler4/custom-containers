@@ -211,12 +211,12 @@ namespace ccnt {
                 ++first;
             }
             else {
-                typename TIterator::ValueType key = *middle;
+                typename TIterator::ValueType key = std::move(*middle);
                 for (TIterator it = middle; middle != first; --middle) {
-                    *it = *(middle - 1);
+                    *it = std::move(*(middle - 1));
                 }
 
-                *first = key;
+                *first = std::move(key);
                 ++first;
                 ++middle;
             }
@@ -233,12 +233,12 @@ namespace ccnt {
                 ++first;
             }
             else {
-                typename TIterator::ValueType key = *middle;
+                typename TIterator::ValueType key = std::move(*middle);
                 for (TIterator it = middle; middle != first; --middle) {
-                    *it = *(middle - 1);
+                    *it = std::move(*(middle - 1));
                 }
 
-                *first = key;
+                *first = std::move(key);
                 ++first;
                 ++middle;
             }
