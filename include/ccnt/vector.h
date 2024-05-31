@@ -375,14 +375,14 @@ namespace ccnt {
 
         inline void reserve(std::uint32_t capacity) {
             assert(capacity > m_capacity);
-            m_capacity = capacity;
             TValue* tmp_data = m_data;
-            m_data = m_allocator.allocate(m_capacity);
+            m_data = m_allocator.allocate(capacity);
             for (std::uint32_t i = 0; i < m_count; i++) {
                 std::construct_at(m_data + i, std::move(tmp_data[i]));
                 std::destroy_at(tmp_data + i);
             }
             m_allocator.deallocate(tmp_data, m_capacity);
+            m_capacity = capacity;
         }
 
         inline void resize(std::uint32_t size, const TValue& v) {
