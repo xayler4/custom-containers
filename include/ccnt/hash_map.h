@@ -122,10 +122,12 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
-                auto* next = m_data + 1;
-                while (!m_data->get_hash_code() && (next != m_head)) {
-                    m_data = next;
-                }
+                do {
+                    m_data++;
+                    if (m_data == m_head) {
+                        break;
+                    }
+                } while (!(m_data->get_hash_code()));
             }
 
             bool operator == (const Iterator& it) {
@@ -189,10 +191,12 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data--;
                 }
-                auto* next = m_data - 1;
-                while (!m_data->get_hash_code() && (next != m_head)) {
-                    m_data = next;
-                }
+                do {
+                    m_data--;
+                    if (m_data == m_head) {
+                        break;
+                    }
+                } while (!(m_data->get_hash_code()));
             }
 
             bool operator == (const ReverseIterator& it) {
@@ -256,10 +260,12 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
-                auto* next = m_data + 1;
-                while (!m_data->get_hash_code() && (next != m_head)) {
-                    m_data = next;
-                }
+                do {
+                    m_data++;
+                    if (m_data == m_head) {
+                        break;
+                    }
+                } while (!(m_data->get_hash_code()));
             }
 
             bool operator == (const ConstIterator& it) {
@@ -324,10 +330,12 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data--;
                 }
-                auto* next = m_data - 1;
-                while (!m_data->get_hash_code() && (next != m_head)) {
-                    m_data = next;
-                }
+                do {
+                    m_data--;
+                    if (m_data == m_head) {
+                        break;
+                    }
+                } while (!(m_data->get_hash_code()));
             }
 
             bool operator == (const ConstReverseIterator& it) {
@@ -387,6 +395,7 @@ namespace ccnt {
                     return;
                 }
             }
+            m_allocator.deallocate(m_data, m_capacity);
         }
 
         template<typename... TArgs>
