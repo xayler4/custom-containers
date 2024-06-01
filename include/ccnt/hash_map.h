@@ -122,9 +122,7 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
-                do {
-                    m_data++;
-                } while (!(m_data->get_hash_code()) && m_data != m_head);
+                while (!m_data->get_hash_code() && (++m_data != m_head));
             }
 
             bool operator == (const Iterator& it) {
@@ -188,9 +186,7 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data--;
                 }
-                do {
-                    m_data--;
-                } while (!(m_data->get_hash_code()) && m_data != m_head);
+                while (!m_data->get_hash_code() && (--m_data != m_head));
             }
 
             bool operator == (const ReverseIterator& it) {
@@ -254,9 +250,7 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
-                do {
-                    m_data++;
-                } while (!(m_data->get_hash_code()) && m_data != m_head);
+                while (!m_data->get_hash_code() && (++m_data != m_head));
             }
 
             bool operator == (const ConstIterator& it) {
@@ -321,9 +315,7 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data--;
                 }
-                do {
-                    m_data--;
-                } while (!(m_data->get_hash_code()) && m_data != m_head);
+                while (!m_data->get_hash_code() && (--m_data != m_head));
             }
 
             bool operator == (const ConstReverseIterator& it) {
