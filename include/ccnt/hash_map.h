@@ -122,7 +122,10 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
-                while (!m_data->get_hash_code() && (++m_data != m_head));
+                auto* next = m_data + 1;
+                while (!m_data->get_hash_code() && (next != m_head)) {
+                    m_data = next;
+                }
             }
 
             bool operator == (const Iterator& it) {
@@ -186,7 +189,10 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data--;
                 }
-                while (!m_data->get_hash_code() && (--m_data != m_head));
+                auto* next = m_data - 1;
+                while (!m_data->get_hash_code() && (next != m_head)) {
+                    m_data = next;
+                }
             }
 
             bool operator == (const ReverseIterator& it) {
@@ -250,7 +256,10 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data++;
                 }
-                while (!m_data->get_hash_code() && (++m_data != m_head));
+                auto* next = m_data + 1;
+                while (!m_data->get_hash_code() && (next != m_head)) {
+                    m_data = next;
+                }
             }
 
             bool operator == (const ConstIterator& it) {
@@ -315,7 +324,10 @@ namespace ccnt {
                 while (!(m_data->get_hash_code())) {
                     m_data--;
                 }
-                while (!m_data->get_hash_code() && (--m_data != m_head));
+                auto* next = m_data - 1;
+                while (!m_data->get_hash_code() && (next != m_head)) {
+                    m_data = next;
+                }
             }
 
             bool operator == (const ConstReverseIterator& it) {
